@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Mạng lưới quan hệ doanh nhân Việt Nam — Demo 6 độ phân cách</title>
+<link rel="stylesheet" href="style.css"/>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <h1>Mạng lưới <span class="g">quan hệ doanh nhân</span> Việt Nam</h1>
+    <p class="sub">Nhập hai người — hệ thống tìm chuỗi kết nối ngắn nhất giữa họ qua các thành viên
+       Hội đồng quản trị / Ban lãnh đạo của doanh nghiệp niêm yết. Ý tưởng "6 độ phân cách".</p>
+    <div class="meta-pills" id="metaPills"></div>
+  </header>
+
+  <div class="panel">
+    <div class="controls">
+      <div class="field-group">
+        <div class="glabel"><i class="dotside"></i> Từ người</div>
+        <div class="field">
+          <input id="fromInput" autocomplete="off" placeholder="VD: Phạm Nhật Vượng"/>
+          <div class="ac" id="fromAc"></div>
+        </div>
+        <div class="field sub" id="fromCoField">
+          <span class="ico">🏢</span>
+          <input id="fromCo" autocomplete="off" placeholder="Lọc theo công ty (tránh trùng tên)"/>
+          <button class="clr" id="fromCoClr" title="Bỏ lọc">✕</button>
+          <div class="ac" id="fromCoAc"></div>
+        </div>
+      </div>
+
+      <button class="swap" id="swapBtn" title="Đảo chiều">⇄</button>
+
+      <div class="field-group">
+        <div class="glabel"><i class="dotside"></i> Đến người</div>
+        <div class="field">
+          <input id="toInput" autocomplete="off" placeholder="VD: Nguyễn Đăng Quang"/>
+          <div class="ac" id="toAc"></div>
+        </div>
+        <div class="field sub" id="toCoField">
+          <span class="ico">🏢</span>
+          <input id="toCo" autocomplete="off" placeholder="Lọc theo công ty (tránh trùng tên)"/>
+          <button class="clr" id="toCoClr" title="Bỏ lọc">✕</button>
+          <div class="ac" id="toCoAc"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="row2">
+      <button class="btn" id="findBtn">🔎 Tìm chuỗi kết nối</button>
+      <button class="btn ghost" id="exBtn">🎲 Thử ví dụ ngẫu nhiên</button>
+      <label class="toggle" style="margin-left:auto">
+        <input type="checkbox" id="weakToggle"/>
+        <span class="track"></span>
+        <span class="tx">Kết nối mở rộng
+          <small>thêm liên kết cùng ngành / cùng tập đoàn</small>
+        </span>
+      </label>
+    </div>
+
+    <div class="legend">
+      <span><i class="dot p"></i> Người</span>
+      <span><i class="dot c"></i> Công ty</span>
+      <span><i class="ln s"></i> Cùng HĐQT (quan hệ thật)</span>
+      <span><i class="ln w"></i> Cùng ngành / tập đoàn (mở rộng)</span>
+    </div>
+  </div>
+
+  <div id="result"></div>
+
+  <div class="grid">
+    <div class="panel">
+      <h3 class="card-h">📊 Thống kê mạng lưới</h3>
+      <div id="stats"></div>
+    </div>
+    <div class="panel">
+      <h3 class="card-h">🌉 Người làm "cầu nối" (ngồi nhiều HĐQT)</h3>
+      <div id="bridges"></div>
+    </div>
+  </div>
+
+  <div class="panel" style="margin-top:18px">
+    <h3 class="card-h">⚡ Cặp gợi ý — bấm để thử ngay</h3>
+    <div class="chips" id="examples"></div>
+  </div>
+
+  <footer>
+    <b>Nguồn dữ liệu:</b> Ban lãnh đạo doanh nghiệp niêm yết, lấy từ CafeF (s.cafef.vn).
+    Đây là <b>demo ý tưởng</b>, không công bố công khai. "Quen biết" ở đây được suy ra từ việc
+    <b>cùng ngồi trong Hội đồng quản trị / Ban lãnh đạo</b> — quan hệ công khai, kiểm chứng được —
+    chứ không phải quan hệ cá nhân riêng tư. Lớp "kết nối mở rộng" (cùng ngành / tập đoàn) chỉ để
+    minh hoạ, không hàm ý hai người quen nhau.
+  </footer>
+
+</div>
+
+<script src="data.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
