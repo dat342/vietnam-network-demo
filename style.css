@@ -153,3 +153,58 @@ footer{margin-top:30px;color:var(--muted);font-size:12.5px;border-top:1px solid 
   .connector .line{display:none}
   .node{max-width:100%;width:100%}
 }
+
+/* ===== Lop "dong gop": CTA + node nguoi dung + modal ===== */
+:root{ --user:#3ddc84; }
+
+/* node & canh nguoi dung them (mau xanh la) */
+.node.person.contrib{border-color:rgba(61,220,132,.6)}
+.person.contrib .avatar{background:linear-gradient(135deg,#6bf0a8,#22b866);color:#062414}
+.node.person.contrib.endpoint{box-shadow:0 0 0 2px var(--user),0 10px 30px rgba(61,220,132,.28)}
+.connector.contrib .line{background:linear-gradient(90deg,transparent,var(--user),transparent)}
+.connector.contrib .lbl{border-color:rgba(61,220,132,.5)}
+.legend .dot.u{background:var(--user)}
+.legend .ln.g{background:var(--user)}
+
+/* CTA mo form */
+.cta-row{display:flex;align-items:center;gap:14px;flex-wrap:wrap;justify-content:center;margin-top:16px}
+.btn.cta{background:linear-gradient(90deg,#1aa363,var(--user));box-shadow:0 8px 24px rgba(61,220,132,.35)}
+.cta-hint{color:var(--muted);font-size:13px}
+
+/* modal */
+.modal-overlay{position:fixed;inset:0;background:rgba(4,8,20,.72);backdrop-filter:blur(3px);
+  display:none;align-items:center;justify-content:center;z-index:100;padding:18px}
+.modal-overlay.open{display:flex;animation:fade .2s}
+@keyframes fade{from{opacity:0}to{opacity:1}}
+.modal{background:linear-gradient(180deg,var(--card),var(--bg2));border:1px solid var(--line);
+  border-radius:18px;padding:24px;max-width:580px;width:100%;max-height:90vh;overflow:auto;
+  position:relative;box-shadow:var(--shadow);animation:pop .25s}
+.modal h2{margin:0 0 6px;font-size:21px}
+.modal-sub{color:var(--muted);font-size:13.5px;margin:0 0 18px}
+.modal-close{position:absolute;top:14px;right:14px;width:34px;height:34px;border-radius:50%;
+  border:1px solid var(--line);background:var(--card2);color:var(--muted);cursor:pointer;font-size:15px}
+.modal-close:hover{color:var(--ink);border-color:var(--accent2)}
+.form-row{margin-bottom:14px}
+.form-row label{display:block;font-size:12.5px;color:var(--muted);font-weight:600;margin-bottom:6px}
+.form-row .req{color:var(--user)}
+.modal input{width:100%;background:var(--bg);border:1.5px solid var(--line);color:var(--ink);
+  border-radius:10px;padding:10px 13px;font-size:14px;outline:none;transition:border .15s}
+.modal input:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(0,74,239,.16)}
+.modal input::placeholder{color:#5e74a6}
+.contacts-head{font-size:12.5px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;
+  color:var(--muted);margin:18px 0 10px;border-top:1px solid var(--line);padding-top:14px}
+.contact-row{display:grid;grid-template-columns:1.6fr 1fr 1fr;gap:8px;margin-bottom:10px}
+.cr-name{position:relative}
+.cr-name .cBadge{position:absolute;right:10px;top:50%;transform:translateY(-50%);font-size:11px;pointer-events:none}
+.cBadge.known{color:var(--accent2)} .cBadge.nw{color:var(--user)}
+.cr-name .cAc{position:absolute;z-index:40;left:0;right:0;top:100%;margin-top:4px;background:var(--card2);
+  border:1px solid var(--line);border-radius:10px;max-height:220px;overflow:auto;box-shadow:var(--shadow);display:none}
+.cr-name .cAc.open{display:block}
+.modal-status{min-height:20px;font-size:13px;margin:8px 0 4px}
+.modal-status.ok{color:var(--user)} .modal-status.err{color:#ff8a8a}
+.modal-actions{display:flex;gap:10px;justify-content:flex-end;margin-top:8px}
+.btn:disabled{opacity:.6;cursor:default;transform:none}
+@media(max-width:640px){
+  .contact-row{grid-template-columns:1fr}
+  .cta-hint{display:none}
+}

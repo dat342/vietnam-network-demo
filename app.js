@@ -4,11 +4,22 @@
   const D = window.GRAPH_DATA;
   if (!D) { alert("Khong tai duoc data.js"); return; }
 
-  const people = D.people;        // code -> {name, companies[], positions{sym:pos}}
+  const people = D.people;        // code -> {name, companies[], positions{sym:pos}}  (+ synthetic: kind,title)
   const companies = D.companies;  // sym  -> {members[], sector, group?}
 
-  /* ---------- xay do thi luong cuc (bipartite) + canh mo rong ---------- */
-  // node id: "p:"+code (nguoi), "c:"+sym (cong ty)
+  /* ---------- tien ich chung ---------- */
+  const esc = s => String(s == null ? "" : s).replace(/[&<>"']/g, c =>
+    ({ "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;", "'":"&#39;" }[c]));
+  const stripTitle = s => s.replace(/^(Ông|Bà)\s+/i, "");
+  const initials = s => { const t = stripTitle(s).trim().split(/\s+/); return ((t[t.length-2]||t[0]||"?")[0] + (t[t.length-1]||"")[0]).toUpperCase(); };
+  const norm = s => (s||"").normalize("NFD").replace(/[̀-ͯ]/g, "")
+                     .replace(/đ/g, "d").replace(/Đ/g, "D").toLowerCase().trim();
+  const nodeIsPerson = id => id[0] === "p";
+  const codeOf = id => id.slice(2), symOf = id => id.slice(2);
+  const companyLabel = sym => sym;
+
+  /* ---------- do thi (co the dung lai) ---------- */
+  // node id: "p:"+code (nguoi), "c:"+sym (cong ty). Nguoi dung them: code "USR_xxx"/"EXT_xxx".
   const adj = new Map();
   const addEdge = (a, b, weak) => {
     if (!adj.has(a)) adj.set(a, []);
@@ -16,12 +27,7 @@
     adj.get(a).push({ to: b, weak });
     adj.get(b).push({ to: a, weak });
   };
-
-  // canh manh: nguoi <-> cong ty (cung ban lanh dao)
-  for (const sym in companies) {
-    for (const code of companies[sym].members) addEdge("p:" + code, "c:" + sym, false);
-  }
-  // canh yeu: cong ty <-> cong ty (cung nganh hoac cung tap doan)
+  // cum cong ty theo nganh / tap doan (tinh 1 lan)
   const bySector = {}, byGroup = {};
   for (const sym in companies) {
     const c = companies[sym];
@@ -33,12 +39,29 @@
       for (let j = i + 1; j < list.length; j++)
         addEdge("c:" + list[i], "c:" + list[j], true);
   };
-  Object.values(bySector).forEach(linkClique);
-  Object.values(byGroup).forEach(linkClique);
+
+  // canh do nguoi dung dong gop (nguoi <-> nguoi), co nhan quan he
+  let contribEdges = [];                 // [{a,b}] voi a,b la code
+  const contribLabels = new Map();       // "p:a|p:b" -> nhan quan he
+  const synthCodes = new Set();          // cac code nguoi-dung-them dang ton tai trong `people`
+
+  function rebuildAdj() {
+    adj.clear();
+    // manh: nguoi <-> cong ty
+    for (const sym in companies)
+      for (const code of companies[sym].members) addEdge("p:" + code, "c:" + sym, false);
+    // yeu: cong ty <-> cong ty (cung nganh / tap doan)
+    Object.values(bySector).forEach(linkClique);
+    Object.values(byGroup).forEach(linkClique);
+    // dong gop: nguoi <-> nguoi (quan he that, khong yeu)
+    for (const e of contribEdges) addEdge("p:" + e.a, "p:" + e.b, false);
+  }
+  rebuildAdj();
 
   /* ---------- BFS tim duong ngan nhat ---------- */
   function bfs(srcId, dstId, allowWeak) {
     if (srcId === dstId) return [srcId];
+    if (!adj.has(srcId) || !adj.has(dstId)) return null;
     const prev = new Map([[srcId, null]]);
     const q = [srcId];
     while (q.length) {
@@ -54,8 +77,8 @@
     for (let n = dstId; n != null; n = prev.get(n)) path.push(n);
     return path.reverse();
   }
-  // tap node toi duoc tu src (de bao "khong noi duoc")
   function reachableCount(srcId, allowWeak) {
+    if (!adj.has(srcId)) return 0;
     const seen = new Set([srcId]); const q = [srcId];
     while (q.length) { const u = q.shift();
       for (const e of (adj.get(u) || [])) {
@@ -63,25 +86,22 @@
         if (!seen.has(e.to)) { seen.add(e.to); q.push(e.to); }
       } }
     let pp = 0; seen.forEach(n => { if (n[0] === "p") pp++; });
-    return pp;
+    return pp - 1;
   }
 
-  /* ---------- tien ich hien thi ---------- */
-  const stripTitle = s => s.replace(/^(Ông|Bà)\s+/i, "");
-  const initials = s => { const t = stripTitle(s).trim().split(/\s+/); return ((t[t.length-2]||t[0]||"?")[0] + (t[t.length-1]||"")[0]).toUpperCase(); };
-  const nodeIsPerson = id => id[0] === "p";
-  const codeOf = id => id.slice(2), symOf = id => id.slice(2);
-  const companyLabel = sym => sym; // ma chung khoan = nhan, ai cung nhan ra
-
-  // nhan canh giua 2 node lien tiep trong path
+  // nhan canh giua 2 node lien tiep
   function edgeLabel(a, b) {
-    if (nodeIsPerson(a) !== nodeIsPerson(b)) {
-      // nguoi <-> cong ty: hien chuc vu cua nguoi tai cong ty do
-      const pid = nodeIsPerson(a) ? a : b, cid = nodeIsPerson(a) ? b : a;
-      const pos = people[codeOf(pid)].positions[symOf(cid)] || "Thành viên";
+    const pa = nodeIsPerson(a), pb = nodeIsPerson(b);
+    if (pa && pb) { // canh dong gop nguoi-nguoi
+      const lbl = contribLabels.get(a + "|" + b) || contribLabels.get(b + "|" + a) || "quen biết";
+      return { text: "🤝 " + lbl, weak: false, contrib: true };
+    }
+    if (pa !== pb) { // nguoi <-> cong ty
+      const pid = pa ? a : b, cid = pa ? b : a;
+      const pr = people[codeOf(pid)];
+      const pos = (pr.positions && pr.positions[symOf(cid)]) || "Thành viên";
       return { text: pos + " · " + symOf(cid), weak: false };
     }
-    // cong ty <-> cong ty: cung tap doan (uu tien) hoac cung nganh
     const ca = companies[symOf(a)], cb = companies[symOf(b)];
     if (ca.group && ca.group === cb.group) return { text: "Cùng " + ca.group, weak: true };
     return { text: "Cùng ngành " + ca.sector, weak: true };
@@ -90,6 +110,23 @@
   /* ---------- render ket qua ---------- */
   const resultEl = document.getElementById("result");
 
+  function personNodeHTML(id, i, ep) {
+    const p = people[codeOf(id)];
+    if (p.kind) { // nguoi dung them
+      const tag = p.kind === "user" ? ("🙋 " + esc(p.title || "Người dùng thêm"))
+                                     : ("➕ " + esc(p.title || "Người được thêm"));
+      return `<div class="node person contrib${ep}" style="animation-delay:${i*70}ms">
+        <div class="top"><div class="avatar">${esc(initials(p.name))}</div>
+          <div><div class="nm">${esc(stripTitle(p.name))}</div></div></div>
+        <div class="tag">${tag}</div></div>`;
+    }
+    const nc = p.companies.length;
+    return `<div class="node person${ep}" style="animation-delay:${i*70}ms">
+      <div class="top"><div class="avatar">${esc(initials(p.name))}</div>
+        <div><div class="nm">${esc(stripTitle(p.name))}</div></div></div>
+      <div class="tag">${nc} doanh nghiệp${nc>1?" · cầu nối":""}</div></div>`;
+  }
+
   function render(path, from, to, allowWeak) {
     if (!path) {
       const r = reachableCount("p:" + from, allowWeak);
@@ -97,21 +134,20 @@
         <div class="big">😕 Chưa tìm thấy đường kết nối</div>
         <div>Hai người này hiện thuộc hai cụm mạng lưới tách biệt.
         ${allowWeak ? "" : "Hãy thử bật <b>“Kết nối mở rộng”</b> ở trên để nối thêm liên kết cùng ngành / tập đoàn."}</div>
-        <div style="margin-top:10px">Từ <b>${stripTitle(people[from].name)}</b> hiện có thể với tới
+        <div style="margin-top:10px">Từ <b>${esc(stripTitle(people[from].name))}</b> hiện có thể với tới
         <b>${r.toLocaleString("vi")}</b> người trong mạng lưới${allowWeak ? "" : " (chế độ quan hệ thật)"}.</div>
       </div>`;
       return;
     }
 
     const persons = path.filter(nodeIsPerson);
-    const hops = persons.length - 1;          // so "buoc" nguoi-toi-nguoi
+    const hops = persons.length - 1;
     const middlePeople = Math.max(persons.length - 2, 0);
     const usedWeak = path.some((id, i) => i > 0 && edgeLabel(path[i-1], id).weak);
 
-    // headline
     let descr;
-    if (middlePeople === 0) descr = `<b>${stripTitle(people[from].name)}</b> và <b>${stripTitle(people[to].name)}</b> kết nối <b>trực tiếp</b>.`;
-    else descr = `<b>${stripTitle(people[from].name)}</b> → <b>${stripTitle(people[to].name)}</b> qua <b>${middlePeople}</b> người trung gian.`;
+    if (middlePeople === 0) descr = `<b>${esc(stripTitle(people[from].name))}</b> và <b>${esc(stripTitle(people[to].name))}</b> kết nối <b>trực tiếp</b>.`;
+    else descr = `<b>${esc(stripTitle(people[from].name))}</b> → <b>${esc(stripTitle(people[to].name))}</b> qua <b>${middlePeople}</b> người trung gian.`;
 
     let html = `<div class="panel">
       <div class="headline">
@@ -121,20 +157,15 @@
       <div class="chain">`;
 
     path.forEach((id, i) => {
-      // node
       if (i > 0) {
         const e = edgeLabel(path[i-1], id);
-        html += `<div class="connector ${e.weak ? "weak" : "strong"}">
-          <div class="lbl">${e.text}</div><div class="line"></div><div class="arrow">▸</div></div>`;
+        const cls = e.contrib ? "contrib" : (e.weak ? "weak" : "strong");
+        html += `<div class="connector ${cls}">
+          <div class="lbl">${esc(e.text)}</div><div class="line"></div><div class="arrow">▸</div></div>`;
       }
       const ep = (i === 0 || i === path.length - 1) ? " endpoint" : "";
       if (nodeIsPerson(id)) {
-        const p = people[codeOf(id)];
-        const nc = p.companies.length;
-        html += `<div class="node person${ep}" style="animation-delay:${i*70}ms">
-          <div class="top"><div class="avatar">${initials(p.name)}</div>
-            <div><div class="nm">${stripTitle(p.name)}</div></div></div>
-          <div class="tag">${nc} doanh nghiệp${nc>1?" · cầu nối":""}</div></div>`;
+        html += personNodeHTML(id, i, ep);
       } else {
         const sym = symOf(id), c = companies[sym];
         html += `<div class="node company${ep}" style="animation-delay:${i*70}ms">
@@ -147,30 +178,37 @@
     html += `</div>`;
     html += `<div class="note">📖 <b>Đọc chuỗi:</b> mỗi người nối với một công ty mà họ tham gia
       ban lãnh đạo; hai người gặp nhau khi cùng một công ty.
-      ${usedWeak ? `Chuỗi này có dùng <b>liên kết mở rộng</b> (nét hồng đứt — cùng ngành/tập đoàn), không hàm ý hai bên quen nhau cá nhân.` : `Toàn bộ chuỗi là <b>quan hệ HĐQT thật</b> (nét xanh liền).`}</div>`;
+      ${usedWeak ? `Chuỗi này có dùng <b>liên kết mở rộng</b> (nét đứt — cùng ngành/tập đoàn), không hàm ý hai bên quen nhau cá nhân.` : `Quan hệ HĐQT (nét xanh liền) và quan hệ do người dùng khai báo (nét xanh lá) đều là quan hệ trực tiếp.`}</div>`;
     html += `</div>`;
     resultEl.innerHTML = html;
   }
 
-  /* ---------- autocomplete ---------- */
-  // danh sach nguoi de tim: {code, name, label}
-  const peopleList = Object.keys(people).map(code => ({
-    code,
-    name: stripTitle(people[code].name),
-    raw: people[code].name,
-    comp: people[code].companies.join(", "),
-  }));
-  const norm = s => s.normalize("NFD").replace(/[̀-ͯ]/g, "")
-                     .replace(/đ/g, "d").replace(/Đ/g, "D").toLowerCase();
-  peopleList.forEach(p => p.key = norm(p.name));
+  /* ---------- danh sach tim kiem (co the dung lai) ---------- */
+  const peopleList = [];   // {code,name,raw,comp,key,kind}
+  function rebuildPeopleList() {
+    peopleList.length = 0;
+    for (const code of Object.keys(people)) {
+      const p = people[code];
+      const nm = stripTitle(p.name);
+      peopleList.push({
+        code,
+        name: nm,
+        raw: p.name,
+        comp: p.kind ? (p.kind === "user" ? "🙋 Bạn (người dùng thêm)" : "➕ Người được thêm")
+                     : (p.companies || []).join(", "),
+        key: norm(nm),
+        kind: p.kind || null,
+      });
+    }
+  }
+  rebuildPeopleList();
 
-  // danh sach cong ty de loc trung ten: {sym, sector, count}
   const companyList = Object.keys(companies).map(sym => ({
     sym, sector: companies[sym].sector, count: companies[sym].members.length,
   })).sort((a, b) => a.sym.localeCompare(b.sym));
   companyList.forEach(c => c.key = norm(c.sym + " " + c.sector));
 
-  // ----- autocomplete NGUOI (co the loc theo 1 cong ty) -----
+  /* ---------- autocomplete NGUOI (loc theo cong ty) ---------- */
   function setupPersonAC(inputId, acId, coInputId, coFieldId) {
     const input = document.getElementById(inputId);
     const ac = document.getElementById(acId);
@@ -184,15 +222,16 @@
         ac.classList.add("open"); return;
       }
       ac.innerHTML = items.map((p, i) => {
-        const comp = people[p.code].companies.map(s => s === filterSym ? `<b>${s}</b>` : s).join(", ");
-        return `<div class="ac-item" data-i="${i}"><div class="nm">${p.name}</div><div class="co">${comp}</div></div>`;
+        const comp = p.kind ? esc(p.comp)
+          : (people[p.code].companies || []).map(s => s === filterSym ? `<b>${esc(s)}</b>` : esc(s)).join(", ");
+        return `<div class="ac-item" data-i="${i}"><div class="nm">${esc(p.name)}</div><div class="co">${comp}</div></div>`;
       }).join("");
       ac.classList.add("open"); hi = -1;
     }
     function search(q) {
-      const nq = norm(q.trim());
+      const nq = norm(q);
       let pool = peopleList;
-      if (filterSym) pool = pool.filter(p => people[p.code].companies.includes(filterSym));
+      if (filterSym) pool = pool.filter(p => !p.kind && (people[p.code].companies || []).includes(filterSym));
       if (!nq) { if (filterSym) renderList(pool.slice(0, 80), ""); else close(); return; }
       renderList(pool.filter(p => p.key.includes(nq)).slice(0, 40), q);
     }
@@ -220,7 +259,7 @@
     }
     return {
       get code(){ return selectedCode; },
-      set(code){ selectedCode = code; input.value = stripTitle(people[code].name); clearFilterUI(); },
+      set(code){ if(!people[code]) return; selectedCode = code; input.value = stripTitle(people[code].name); clearFilterUI(); },
       setFilter(sym){
         filterSym = sym; selectedCode = null;
         const f = document.getElementById(coFieldId); if (f) f.classList.toggle("active", !!sym);
@@ -230,14 +269,13 @@
     };
   }
 
-  // ----- autocomplete CONG TY (de loc) -----
   function setupCompanyAC(inputId, acId, onPick) {
     const input = document.getElementById(inputId);
     const ac = document.getElementById(acId);
     let items = [], hi = -1;
     function close(){ ac.classList.remove("open"); hi = -1; }
     function search(q){
-      const nq = norm(q.trim());
+      const nq = norm(q);
       items = (nq ? companyList.filter(c => c.key.includes(nq)) : companyList).slice(0, 60);
       if (!items.length){ ac.innerHTML = `<div class="ac-empty">Không thấy công ty “${q}”</div>`; ac.classList.add("open"); return; }
       ac.innerHTML = items.map((c, i) =>
@@ -294,17 +332,18 @@
     if (fromAC.code && toAC.code) doFind();
   });
 
-  /* ---------- cau noi (bridges) ---------- */
+  /* ---------- cau noi (bridges) — chi tinh nguoi CafeF ---------- */
   const bridges = Object.keys(people)
+    .filter(code => !people[code].kind)
     .map(code => ({ code, p: people[code] }))
-    .filter(x => x.p.companies.length >= 2)
+    .filter(x => (x.p.companies||[]).length >= 2)
     .sort((a,b) => b.p.companies.length - a.p.companies.length);
 
   document.getElementById("bridges").innerHTML = bridges.slice(0, 14).map((x, i) =>
     `<div class="bridge" data-code="${x.code}">
       <div class="rank">${i+1}</div>
-      <div><div class="bn">${stripTitle(x.p.name)}</div>
-           <div class="bc">${x.p.companies.join(" · ")}</div></div>
+      <div><div class="bn">${esc(stripTitle(x.p.name))}</div>
+           <div class="bc">${esc(x.p.companies.join(" · "))}</div></div>
       <div class="cnt">${x.p.companies.length} cty</div>
     </div>`).join("");
   document.getElementById("bridges").addEventListener("click", e => {
@@ -314,7 +353,6 @@
   });
 
   /* ---------- thong ke ---------- */
-  // dem thanh phan lien thong (che do quan he that)
   function components(allowWeak) {
     const seen = new Set(); let comps = 0, biggest = 0;
     for (const n of adj.keys()) {
@@ -326,46 +364,42 @@
     }
     return { comps, biggest };
   }
-  const cc = components(false);
-  const npeople = Object.keys(people).length, ncomp = Object.keys(companies).length;
-  document.getElementById("stats").innerHTML = `
-    <div class="stat-row"><span>Doanh nghiệp niêm yết</span><b>${ncomp}</b></div>
-    <div class="stat-row"><span>Tổng số nhân sự lãnh đạo</span><b>${npeople.toLocaleString("vi")}</b></div>
-    <div class="stat-row"><span>Người làm cầu nối (≥2 HĐQT)</span><b>${bridges.length}</b></div>
-    <div class="stat-row"><span>Số cụm tách biệt (quan hệ thật)</span><b>${cc.comps}</b></div>
-    <div class="stat-row"><span>Cụm lớn nhất với tới</span><b>${cc.biggest} người</b></div>`;
-
-  document.getElementById("metaPills").innerHTML = `
-    <span class="pill">Nguồn <b>CafeF</b></span>
-    <span class="pill"><b>${ncomp}</b> doanh nghiệp</span>
-    <span class="pill"><b>${npeople.toLocaleString("vi")}</b> lãnh đạo</span>
-    <span class="pill"><b>${bridges.length}</b> cầu nối</span>
-    <span class="pill">Cập nhật <b>${(D.meta.generated_at||"").split(" ")[0]}</b></span>`;
-
-  /* ---------- vi du goi y (cap chac chan co duong) ---------- */
-  // chon vai cap doanh nhan noi tieng cung cum
-  const exPairs = [];
-  function findExamplesForBridge(b) {
-    // ghep 2 cau noi trong cung cum lon
+  const ncomp = Object.keys(companies).length;
+  function refreshStats() {
+    const basePeople = Object.keys(people).filter(c => !people[c].kind).length;
+    const contribCount = synthCodes.size;
+    const cc = components(false);
+    document.getElementById("stats").innerHTML = `
+      <div class="stat-row"><span>Doanh nghiệp niêm yết</span><b>${ncomp}</b></div>
+      <div class="stat-row"><span>Tổng số nhân sự lãnh đạo</span><b>${basePeople.toLocaleString("vi")}</b></div>
+      <div class="stat-row"><span>Người làm cầu nối (≥2 HĐQT)</span><b>${bridges.length}</b></div>
+      ${contribCount ? `<div class="stat-row"><span>👥 Người dùng đóng góp</span><b>${contribCount}</b></div>` : ""}
+      <div class="stat-row"><span>Số cụm tách biệt (quan hệ thật)</span><b>${cc.comps}</b></div>
+      <div class="stat-row"><span>Cụm lớn nhất với tới</span><b>${cc.biggest} người</b></div>`;
+    document.getElementById("metaPills").innerHTML = `
+      <span class="pill">Nguồn <b>CafeF</b></span>
+      <span class="pill"><b>${ncomp}</b> doanh nghiệp</span>
+      <span class="pill"><b>${basePeople.toLocaleString("vi")}</b> lãnh đạo</span>
+      ${contribCount ? `<span class="pill">👥 <b>${contribCount}</b> đóng góp</span>` : ""}
+      <span class="pill">Cập nhật <b>${(D.meta.generated_at||"").split(" ")[0]}</b></span>`;
   }
-  // tao cap ngau nhien co duong (che do that), uu tien nguoi noi tieng
+  refreshStats();
+
+  /* ---------- vi du goi y ---------- */
   const famous = bridges.slice(0, 30).map(x => x.code);
   function makeExamples() {
-    const found = [];
-    const seenPairs = new Set();
+    const found = [], seenPairs = new Set();
     for (let tries = 0; tries < 400 && found.length < 6; tries++) {
       const a = famous[(Math.random()*famous.length)|0];
       const b = famous[(Math.random()*famous.length)|0];
       if (a===b) continue;
       const key = a<b?a+b:b+a; if (seenPairs.has(key)) continue; seenPairs.add(key);
       const path = bfs("p:"+a, "p:"+b, false);
-      if (path && path.filter(nodeIsPerson).length>=3 && path.filter(nodeIsPerson).length<=6)
-        found.push([a,b]);
+      if (path && path.filter(nodeIsPerson).length>=3 && path.filter(nodeIsPerson).length<=6) found.push([a,b]);
     }
     return found;
   }
   let examples = makeExamples();
-  // bo sung cap "kinh dien" neu co
   function ensurePair(nameA, nameB) {
     const a = peopleList.find(p=>norm(p.name).includes(norm(nameA)));
     const b = peopleList.find(p=>norm(p.name).includes(norm(nameB)));
@@ -376,7 +410,7 @@
 
   function renderExamples() {
     document.getElementById("examples").innerHTML = examples.map(([a,b]) =>
-      `<span class="chip" data-a="${a}" data-b="${b}">${stripTitle(people[a].name)} ↔ ${stripTitle(people[b].name)}</span>`
+      `<span class="chip" data-a="${a}" data-b="${b}">${esc(stripTitle(people[a].name))} ↔ ${esc(stripTitle(people[b].name))}</span>`
     ).join("") || `<span class="ac-empty">Bấm “Thử ví dụ ngẫu nhiên”.</span>`;
   }
   renderExamples();
@@ -389,21 +423,75 @@
 
   document.getElementById("exBtn").addEventListener("click", () => {
     const allowWeak = document.getElementById("weakToggle").checked;
-    // cap ngau nhien bat ky (uu tien co duong)
-    const codes = Object.keys(people);
+    const codes = Object.keys(people).filter(c => !people[c].kind);
     for (let i=0;i<300;i++){
       const a = codes[(Math.random()*codes.length)|0];
       const b = codes[(Math.random()*codes.length)|0];
       if (a===b) continue;
       const path = bfs("p:"+a,"p:"+b,allowWeak);
-      if (path && path.filter(nodeIsPerson).length>=3){
-        fromAC.set(a); toAC.set(b); doFind(); return;
-      }
+      if (path && path.filter(nodeIsPerson).length>=3){ fromAC.set(a); toAC.set(b); doFind(); return; }
     }
-    // fallback: cap cau noi
     const [a,b] = examples[(Math.random()*examples.length)|0] || [];
     if (a){ fromAC.set(a); toAC.set(b); doFind(); }
   });
+
+  /* ---------- nap du lieu dong gop tu nguoi dung ---------- */
+  // list: [{user, userTitle, contacts:[{code|null, name, title, relationship}]}]
+  function applyContributions(list) {
+    for (const c of synthCodes) delete people[c];
+    synthCodes.clear(); contribEdges = []; contribLabels.clear();
+
+    list = Array.isArray(list) ? list : [];
+    // pass 1: tao node nguoi dung (USR_)
+    for (const ct of list) {
+      const uname = (ct.user||"").trim(); if (!uname) continue;
+      const uCode = "USR_" + norm(uname);
+      if (!people[uCode]) people[uCode] = { name: uname, companies: [], kind: "user", title: (ct.userTitle||"").trim() };
+      else if (ct.userTitle) people[uCode].title = (ct.userTitle||"").trim();
+      synthCodes.add(uCode);
+    }
+    // pass 2: tao contact + canh
+    for (const ct of list) {
+      const uname = (ct.user||"").trim(); if (!uname) continue;
+      const uCode = "USR_" + norm(uname);
+      for (const k of (ct.contacts||[])) {
+        const cname = (k.name||"").trim(); if (!cname) continue;
+        let tCode = k.code;
+        if (!tCode || !people[tCode]) {
+          if (tCode && /^(USR_|EXT_)/.test(tCode)) {
+            people[tCode] = { name: cname, companies: [], kind: tCode.startsWith("USR_")?"user":"ext", title:(k.title||"").trim() };
+          } else {
+            tCode = "EXT_" + norm(cname);
+            if (!people[tCode]) people[tCode] = { name: cname, companies: [], kind: "ext", title:(k.title||"").trim() };
+            else if (k.title && !people[tCode].title) people[tCode].title = (k.title||"").trim();
+          }
+          synthCodes.add(tCode);
+        } else if (people[tCode].kind) {
+          synthCodes.add(tCode);
+        }
+        if (tCode === uCode) continue;
+        contribEdges.push({ a: uCode, b: tCode });
+        contribLabels.set("p:"+uCode+"|p:"+tCode, (k.relationship||"").trim() || "quen biết");
+      }
+    }
+    rebuildAdj();
+    rebuildPeopleList();
+    refreshStats();
+  }
+
+  /* ---------- API cho social.js ---------- */
+  window.VNNet = {
+    norm,
+    applyContributions,
+    searchPeople(q, limit = 20) {
+      const nq = norm(q);
+      if (!nq) return [];
+      return peopleList.filter(p => p.key.includes(nq)).slice(0, limit)
+        .map(p => ({ code: p.code, name: p.name, comp: p.comp, kind: p.kind }));
+    },
+    selectFrom(code){ fromAC.set(code); },
+    findFromTo(fromCode, toCode){ fromAC.set(fromCode); if (toCode) toAC.set(toCode); doFind(); },
+  };
 
   // trang thai ban dau
   resultEl.innerHTML = `<div class="panel empty-msg">
