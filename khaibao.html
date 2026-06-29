@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Khai báo quan hệ — Mạng lưới quan hệ doanh nhân VN</title>
+<link rel="stylesheet" href="style.css"/>
+</head>
+<body>
+<div id="pageLoading" class="page-loading"><div class="spin"></div>Đang tải…</div>
+<div class="wrap">
+  <div id="authBar" class="authbar"></div>
+  <header>
+    <h1>➕ <span class="g">Khai báo quan hệ</span> của bạn</h1>
+    <p class="sub">Node của bạn trong mạng lưới là <b id="meName">—</b>. Khai báo tối đa 3 người bạn quen — mọi người đều thấy.</p>
+  </header>
+
+  <div class="panel">
+    <div class="form-grid2">
+      <div class="form-row"><label>Phòng ban của bạn (tuỳ chọn)</label><input id="dcDept" placeholder="VD: Khối Kinh doanh"/></div>
+      <div class="form-row"><label>Chức vụ của bạn (tuỳ chọn)</label><input id="dcTitle" placeholder="VD: Trưởng phòng"/></div>
+    </div>
+    <div class="contacts-head">Người bạn quen</div>
+    <div id="dcRows"></div>
+    <div class="modal-status" id="dcStatus"></div>
+    <div class="modal-actions">
+      <a class="btn ghost" href="index.html">Huỷ</a>
+      <button class="btn" id="dcSave">💾 Lưu vào mạng lưới</button>
+    </div>
+  </div>
+</div>
+<script src="data.js"></script>
+<script type="module" src="khaibao.js"></script>
+</body>
+</html>
