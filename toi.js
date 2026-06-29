@@ -23,9 +23,10 @@ async function render(user, profile) {
       <div class="my-actions"><a class="btn" href="khaibao.html">➕ Khai báo ngay</a></div>`;
     return;
   }
-  const meRole = [mine.title, mine.department].filter(Boolean).map(esc).join(" · ");
+  const yrStr = (s, e) => s ? `${s}–${e || "nay"}` : "";
+  const meRole = [mine.title, mine.department, yrStr(mine.startYear, mine.endYear)].filter(Boolean).map(esc).join(" · ");
   const list = mine.contacts.map(c => {
-    const sub = [c.title, c.department].filter(Boolean).map(esc).join(" · ");
+    const sub = [c.title, c.department, yrStr(c.startYear, c.endYear)].filter(Boolean).map(esc).join(" · ");
     return `<div class="my-rel">
       <div><b>${esc(c.name)}</b>${sub ? ` <span class="muted">· ${sub}</span>` : ""}</div>
       <div class="my-rel-tag">${relIcon(c.relationship)} ${esc(c.relationship||"quen biết")}</div></div>`;

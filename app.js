@@ -546,6 +546,7 @@
         .map(p => ({ code: p.code, name: p.name, comp: p.comp, kind: p.kind, image: p.image }));
     },
     selectFrom(code){ fromAC.set(code); },
+    selectTo(code){ toAC.set(code); },
     findFromTo(fromCode, toCode){ fromAC.set(fromCode); if (toCode) toAC.set(toCode); doFind(); },
   };
 

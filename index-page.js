@@ -9,4 +9,6 @@ requireAuth(async (user, profile) => {
     if (window.VNNet) window.VNNet.applyContributions(list);
   } catch (e) { console.warn("load contributions:", e); }
   if (window.VNNet) window.VNNet.selectFrom("USR_" + user.uid);
+  const to = new URLSearchParams(location.search).get("to");
+  if (to && window.VNNet) window.VNNet.selectTo(to);
 });

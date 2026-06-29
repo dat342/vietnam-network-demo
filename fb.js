@@ -93,9 +93,12 @@ export async function getMyContribution(uid) {
   const s = await getDoc(doc(db, "contributions", uid));
   return s.exists() ? s.data() : null;
 }
-export async function saveMyContribution(uid, name, title, department, contacts) {
+export async function saveMyContribution(uid, name, data) {
   await setDoc(doc(db, "contributions", uid), {
-    ownerUid: uid, ownerName: name, title, department, contacts, updatedAt: serverTimestamp() });
+    ownerUid: uid, ownerName: name,
+    title: data.title || "", department: data.department || "",
+    startYear: data.startYear || "", endYear: data.endYear || "",
+    contacts: data.contacts || [], updatedAt: serverTimestamp() });
 }
 export async function deleteMyContribution(uid) { await deleteDoc(doc(db, "contributions", uid)); }
 
@@ -122,8 +125,8 @@ export function renderShell(active, profile) {
     <div class="sb-logo"><i class="ti ti-network"></i>Mạng lưới VN</div>
     ${item("dashboard.html","layout-dashboard","Tổng quan","dashboard")}
     ${item("index.html","route","Tìm kết nối","index")}
-    ${item("","users-group","Tra cứu nhân sự","tracuu",true)}
-    ${item("","building-skyscraper","Danh bạ doanh nghiệp","danhba",true)}
+    ${item("tracuu.html","users-group","Tra cứu nhân sự","tracuu")}
+    ${item("danhba.html","building-skyscraper","Danh bạ doanh nghiệp","danhba")}
     ${item("","affiliate","Khám phá mạng lưới","khampha",true)}
     <div class="sb-sec">Của bạn</div>
     ${item("khaibao.html","user-plus","Khai báo quan hệ","khaibao")}

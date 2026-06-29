@@ -32,6 +32,10 @@ function buildRows() {
         <input class="cDept" autocomplete="off" placeholder="Phòng ban (tuỳ chọn)"/>
         <input class="cTitle" autocomplete="off" placeholder="Chức vụ (tuỳ chọn)"/>
       </div>
+      <div class="form-grid2">
+        <input class="cStart" inputmode="numeric" autocomplete="off" placeholder="Năm bắt đầu"/>
+        <input class="cEnd" inputmode="numeric" autocomplete="off" placeholder="Năm kết thúc"/>
+      </div>
       ${relSelectHTML()}
     </div>`;
   $("dcRows").innerHTML = rows;
@@ -81,12 +85,16 @@ requireAuth(async (user, profile) => {
   let mine = null; try { mine = await getMyContribution(user.uid); } catch (e) {}
   $("dcTitle").value = (mine && mine.title) || "";
   $("dcDept").value = (mine && mine.department) || "";
+  $("dcStart").value = (mine && mine.startYear) || "";
+  $("dcEnd").value = (mine && mine.endYear) || "";
   document.querySelectorAll(".contact-card").forEach((r, i) => {
     const c = mine && mine.contacts && mine.contacts[i];
     const nameI = r.querySelector(".cName"), badge = r.querySelector(".cBadge");
     nameI.value = c ? (c.name||"") : ""; nameI._code = c ? (c.code||null) : null;
     r.querySelector(".cDept").value = c ? (c.department||"") : "";
     r.querySelector(".cTitle").value = c ? (c.title||"") : "";
+    r.querySelector(".cStart").value = c ? (c.startYear||"") : "";
+    r.querySelector(".cEnd").value = c ? (c.endYear||"") : "";
     r.querySelector(".cRel").value = c ? (c.relationship||"") : "";
     badge.textContent = nameI._code ? "✓ có sẵn" : (nameI.value ? "＋ người mới" : "");
     badge.className = "cBadge" + (nameI._code ? " known" : (nameI.value ? " nw" : ""));
@@ -96,18 +104,21 @@ requireAuth(async (user, profile) => {
   $("dcSave").onclick = async () => {
     const status = $("dcStatus");
     const title = $("dcTitle").value.trim(), department = $("dcDept").value.trim();
+    const startYear = $("dcStart").value.trim(), endYear = $("dcEnd").value.trim();
     const contacts = [];
     document.querySelectorAll(".contact-card").forEach(r => {
       const name = r.querySelector(".cName").value.trim(); if (!name) return;
       contacts.push({ name, code: r.querySelector(".cName")._code || null,
         department: r.querySelector(".cDept").value.trim(),
         title: r.querySelector(".cTitle").value.trim(),
+        startYear: r.querySelector(".cStart").value.trim(),
+        endYear: r.querySelector(".cEnd").value.trim(),
         relationship: r.querySelector(".cRel").value.trim() });
     });
     if (!contacts.length) { status.textContent = "⚠ Khai báo ít nhất 1 người quen."; status.className = "modal-status err"; return; }
     const btn = $("dcSave"); btn.disabled = true; status.textContent = "⏳ Đang lưu…"; status.className = "modal-status";
     try {
-      await saveMyContribution(user.uid, profile.displayName, title, department, contacts);
+      await saveMyContribution(user.uid, profile.displayName, { title, department, startYear, endYear, contacts });
       status.textContent = "✓ Đã lưu! Đang chuyển…"; status.className = "modal-status ok";
       setTimeout(() => location.href = "toi.html", 700);
     } catch (e) { status.textContent = "✕ Lưu thất bại: " + (e.message||e); status.className = "modal-status err"; btn.disabled = false; }

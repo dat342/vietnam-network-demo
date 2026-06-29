@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Tra cứu nhân sự — Mạng lưới quan hệ doanh nhân VN</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3/dist/tabler-icons.min.css"/>
+<link rel="stylesheet" href="style.css"/>
+</head>
+<body>
+<div id="pageLoading" class="page-loading"><div class="spin"></div>Đang tải…</div>
+<div class="layout">
+  <aside class="sidebar" id="sidebar"></aside>
+  <div class="main">
+    <header class="topbar" id="topbar"></header>
+    <div class="content">
+      <div class="page-title">Tra cứu nhân sự</div>
+      <div class="page-sub">Chọn công ty và phòng ban để xem danh sách lãnh đạo.</div>
+      <div class="panel">
+        <div class="filter-row">
+          <div class="filter-field"><label>Công ty</label><select id="selCompany"></select></div>
+          <div class="filter-field"><label>Phòng ban</label><select id="selDept"></select></div>
+        </div>
+      </div>
+      <div id="results"></div>
+    </div>
+  </div>
+</div>
+<script src="data.js"></script>
+<script type="module" src="tracuu.js"></script>
+</body>
+</html>

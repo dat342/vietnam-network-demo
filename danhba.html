@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Danh bạ doanh nghiệp — Mạng lưới quan hệ doanh nhân VN</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3/dist/tabler-icons.min.css"/>
+<link rel="stylesheet" href="style.css"/>
+</head>
+<body>
+<div id="pageLoading" class="page-loading"><div class="spin"></div>Đang tải…</div>
+<div class="layout">
+  <aside class="sidebar" id="sidebar"></aside>
+  <div class="main">
+    <header class="topbar" id="topbar"></header>
+    <div class="content">
+      <div class="page-title">Danh bạ doanh nghiệp</div>
+      <div class="page-sub">Bấm vào một doanh nghiệp để xem ban lãnh đạo.</div>
+      <div class="panel"><input id="coSearch" class="plain-input" placeholder="Tìm theo mã hoặc ngành…"/></div>
+      <div class="co-grid" id="coGrid"></div>
+    </div>
+  </div>
+</div>
+<script src="data.js"></script>
+<script type="module" src="danhba.js"></script>
+</body>
+</html>
