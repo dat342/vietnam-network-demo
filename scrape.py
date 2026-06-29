@@ -95,10 +95,11 @@ def main():
         for L in leaders:
             c = L['code']
             companies[sym]['members'].add(c)
-            pr = people.setdefault(c, {'name': L['name'], 'positions': {}, 'companies': set(), 'image': ''})
+            pr = people.setdefault(c, {'name': L['name'], 'positions': {}, 'groups': {}, 'companies': set(), 'image': ''})
             pr['companies'].add(sym)
-            # giu chuc vu (uu tien dong dau tien gap o moi cong ty)
+            # giu chuc vu + nhom (phong ban) theo tung cong ty
             pr['positions'].setdefault(sym, L['position'])
+            pr['groups'].setdefault(sym, L.get('group', ''))
             if L.get('image') and not pr['image']:  # luu anh dau tien co
                 pr['image'] = L['image']
             if len(L['name']) > len(pr['name']):  # ten day du hon
@@ -112,6 +113,7 @@ def main():
         'name': v['name'],
         'companies': sorted(v['companies']),
         'positions': v['positions'],
+        'groups': v.get('groups', {}),
         'image': v.get('image', ''),
     } for c, v in people.items()}
     companies_out = {s: {'members': sorted(v['members'])} for s, v in companies.items()}

@@ -142,9 +142,9 @@ $g("#rgBtn").addEventListener("click", async () => {
 onAuthStateChanged(auth, async (user) => {
   if (!user) {
     ME = MY_PROFILE = null;
-    gate.classList.remove("hidden");
     if (window.VNNet) window.VNNet.applyContributions([]);
     renderAuthBar();
+    route();
     return;
   }
   ME = user;
@@ -156,10 +156,11 @@ onAuthStateChanged(auth, async (user) => {
     gateStatus("⛔ Tài khoản của bạn đã bị khoá bởi quản trị viên.", "err");
     await signOut(auth); return;
   }
-  gate.classList.add("hidden"); gateStatus("");
+  gateStatus("");
   renderAuthBar();
   try { await loadAllContributions(); } catch(e){ console.warn("load contribs:", e); }
   if (window.VNNet) window.VNNet.selectFrom("USR_" + user.uid);
+  route();
 });
 
 /* ---------- AUTH BAR ---------- */
@@ -176,10 +177,10 @@ function renderAuthBar() {
       ${isAdmin?'<button class="btn ghost sm" id="abAdmin">🛡️ Quản trị</button>':''}
       <button class="btn ghost sm" id="abOut">Đăng xuất</button>
     </span>`;
-  bar.querySelector("#abDeclare").onclick = () => openDeclareModal();
-  bar.querySelector("#abMine").onclick = () => openMyPage();
+  bar.querySelector("#abDeclare").onclick = () => { location.hash = "#/khaibao"; };
+  bar.querySelector("#abMine").onclick = () => { location.hash = "#/toi"; };
   bar.querySelector("#abOut").onclick = () => signOut(auth);
-  if (isAdmin) bar.querySelector("#abAdmin").onclick = () => openAdmin();
+  if (isAdmin) bar.querySelector("#abAdmin").onclick = () => { location.hash = "#/admin"; };
 }
 
 /* ---------- contact autocomplete ---------- */
@@ -251,8 +252,8 @@ function buildDeclareModal() {
   </div>`);
   document.body.appendChild(m);
   m.querySelectorAll(".contact-card").forEach(r => wireContactAC(r.querySelector(".cName"), r.querySelector(".cAc"), r.querySelector(".cBadge")));
-  m.querySelectorAll("[data-close]").forEach(b=>b.onclick=()=>m.classList.remove("open"));
-  m.addEventListener("mousedown", e=>{ if(e.target===m) m.classList.remove("open"); });
+  m.querySelectorAll("[data-close]").forEach(b=>b.onclick=()=>{ location.hash="#/"; });
+  m.addEventListener("mousedown", e=>{ if(e.target===m) location.hash="#/"; });
   m.querySelector("#dcSave").onclick = saveDeclare;
   return m;
 }
@@ -295,7 +296,7 @@ async function saveDeclare() {
     await saveMyContribution(title, department, contacts);
     await loadAllContributions();
     status.textContent="✓ Đã lưu!"; status.className="modal-status ok";
-    setTimeout(()=>{ m.classList.remove("open"); if(window.VNNet) window.VNNet.selectFrom("USR_"+ME.uid);
+    setTimeout(()=>{ location.hash="#/"; if(window.VNNet) window.VNNet.selectFrom("USR_"+ME.uid);
       const fi=document.getElementById("fromInput"); fi&&fi.scrollIntoView({behavior:"smooth",block:"center"}); }, 800);
   } catch(e){ status.textContent="✕ Lưu thất bại: "+(e.message||e); status.className="modal-status err"; }
   finally { btn.disabled=false; }
@@ -314,8 +315,8 @@ function buildMyPage() {
     </div>
   </div>`);
   document.body.appendChild(m);
-  m.querySelectorAll("[data-close]").forEach(b=>b.onclick=()=>m.classList.remove("open"));
-  m.addEventListener("mousedown", e=>{ if(e.target===m) m.classList.remove("open"); });
+  m.querySelectorAll("[data-close]").forEach(b=>b.onclick=()=>{ location.hash="#/"; });
+  m.addEventListener("mousedown", e=>{ if(e.target===m) location.hash="#/"; });
   return m;
 }
 async function openMyPage() {
@@ -329,7 +330,7 @@ async function openMyPage() {
   if (!mine || !mine.contacts || !mine.contacts.length) {
     body.innerHTML = head + `<div class="my-empty">Bạn chưa khai báo quan hệ nào.</div>
       <button class="btn" id="myDeclare">➕ Khai báo ngay</button>`;
-    body.querySelector("#myDeclare").onclick = () => { myPage.classList.remove("open"); openDeclareModal(); };
+    body.querySelector("#myDeclare").onclick = () => { location.hash = "#/khaibao"; };
     return;
   }
   const list = mine.contacts.map(c => {
@@ -344,7 +345,7 @@ async function openMyPage() {
       <button class="btn sm" id="myEdit">✏️ Sửa</button>
       <button class="btn ghost sm danger" id="myDel">🗑️ Xoá toàn bộ khai báo</button>
     </div>`;
-  body.querySelector("#myEdit").onclick = () => { myPage.classList.remove("open"); openDeclareModal(); };
+  body.querySelector("#myEdit").onclick = () => { location.hash = "#/khaibao"; };
   body.querySelector("#myDel").onclick = async () => {
     if (!confirm("Xoá toàn bộ quan hệ bạn đã khai? Không thể hoàn tác.")) return;
     try { await deleteMyContribution(); await loadAllContributions(); openMyPage(); }
@@ -367,8 +368,8 @@ function buildAdmin() {
     </div>
   </div>`);
   document.body.appendChild(m);
-  m.querySelectorAll("[data-close]").forEach(b=>b.onclick=()=>m.classList.remove("open"));
-  m.addEventListener("mousedown", e=>{ if(e.target===m) m.classList.remove("open"); });
+  m.querySelectorAll("[data-close]").forEach(b=>b.onclick=()=>{ location.hash="#/"; });
+  m.addEventListener("mousedown", e=>{ if(e.target===m) location.hash="#/"; });
   return m;
 }
 async function openAdmin() {
@@ -412,3 +413,29 @@ async function openAdmin() {
     });
   });
 }
+
+/* ---------- ROUTER: moi luong 1 URL hash ---------- */
+function closeModals() {
+  [declareModal, myPage, adminPanel].forEach(m => m && m.classList.remove("open"));
+}
+function route() {
+  const h = (location.hash.replace(/^#\/?/, "") || "").toLowerCase();
+  if (!ME) {
+    closeModals();
+    gate.classList.remove("hidden");
+    if (h !== "login") location.hash = "#/login";
+    return;
+  }
+  gate.classList.add("hidden");
+  if (h === "" || h === "login") { closeModals(); if (h === "login") location.hash = "#/"; return; }
+  if (h === "toi") { closeModals(); openMyPage(); return; }
+  if (h === "khaibao") { closeModals(); openDeclareModal(); return; }
+  if (h === "admin") {
+    if (MY_PROFILE && MY_PROFILE.role === "admin") { closeModals(); openAdmin(); }
+    else { closeModals(); location.hash = "#/"; }
+    return;
+  }
+  closeModals(); // route khong xac dinh -> trang chu
+}
+window.addEventListener("hashchange", route);
+route();

@@ -126,10 +126,30 @@
     return { text: "Cùng ngành " + ca.sector, weak: true };
   }
 
+  // sinh text "goi y cach ket noi" tu duong di
+  function buildSuggestion(path) {
+    const pIdx = [];
+    path.forEach((id, i) => { if (nodeIsPerson(id)) pIdx.push(i); });
+    if (pIdx.length < 2) return "";
+    const nameOf = id => `<b>${esc(stripTitle(people[codeOf(id)].name))}</b>`;
+    const steps = [];
+    for (let k = 0; k < pIdx.length - 1; k++) {
+      const a = path[pIdx[k]], b = path[pIdx[k+1]];
+      const between = path.slice(pIdx[k] + 1, pIdx[k+1]).filter(x => x[0] === "c");
+      let how;
+      if (between.length === 0) how = `quan hệ ${esc(edgeLabel(a, b).text)}`;
+      else if (between.length === 1) how = `cùng ban lãnh đạo <b>${esc(symOf(between[0]))}</b>`;
+      else how = `qua <b>${esc(symOf(between[0]))}</b>–<b>${esc(symOf(between[between.length-1]))}</b> (cùng ngành/tập đoàn)`;
+      steps.push(`nhờ ${nameOf(a)} giới thiệu ${nameOf(b)} <span class="how">(${how})</span>`);
+    }
+    const dest = nameOf(path[pIdx[pIdx.length-1]]);
+    return `💡 <b>Cách kết nối tới ${dest}:</b> ` + steps.join(";<br>→ rồi ") + ".";
+  }
+
   /* ---------- render ket qua ---------- */
   const resultEl = document.getElementById("result");
 
-  function personNodeHTML(id, i, ep) {
+  function personNodeHTML(id, i, ep, adjSym) {
     const p = people[codeOf(id)];
     if (p.kind) { // nguoi dung them
       const role = [p.title, p.department].filter(Boolean).map(esc).join(" · ");
@@ -141,10 +161,17 @@
         <div class="tag">${tag}</div></div>`;
     }
     const nc = p.companies.length;
+    let role = "";
+    if (adjSym && p.positions && p.positions[adjSym]) {
+      const grp = (p.groups && p.groups[adjSym]) || "";
+      role = esc(p.positions[adjSym]) + (grp ? " · " + esc(grp) : "");
+    }
+    const tag = role ? (role + (nc > 1 ? ` · 🌉 ${nc} DN` : ""))
+                     : `${nc} doanh nghiệp${nc>1?" · cầu nối":""}`;
     return `<div class="node person${ep}" style="animation-delay:${i*70}ms">
       <div class="top">${avatarHTML(p)}
         <div><div class="nm">${esc(stripTitle(p.name))}</div></div></div>
-      <div class="tag">${nc} doanh nghiệp${nc>1?" · cầu nối":""}</div></div>`;
+      <div class="tag">${tag}</div></div>`;
   }
 
   function render(path, from, to, allowWeak) {
@@ -186,7 +213,10 @@
       }
       const ep = (i === 0 || i === path.length - 1) ? " endpoint" : "";
       if (nodeIsPerson(id)) {
-        html += personNodeHTML(id, i, ep);
+        let adjSym = "";
+        if (i > 0 && path[i-1][0] === "c") adjSym = symOf(path[i-1]);
+        else if (i < path.length-1 && path[i+1][0] === "c") adjSym = symOf(path[i+1]);
+        html += personNodeHTML(id, i, ep, adjSym);
       } else {
         const sym = symOf(id), c = companies[sym];
         html += `<div class="node company${ep}" style="animation-delay:${i*70}ms">
@@ -197,6 +227,8 @@
     });
 
     html += `</div>`;
+    const sugg = buildSuggestion(path);
+    if (sugg) html += `<div class="suggest">${sugg}</div>`;
     html += `<div class="note">📖 <b>Đọc chuỗi:</b> mỗi người nối với một công ty mà họ tham gia
       ban lãnh đạo; hai người gặp nhau khi cùng một công ty.
       ${usedWeak ? `Chuỗi này có dùng <b>liên kết mở rộng</b> (nét đứt — cùng ngành/tập đoàn), không hàm ý hai bên quen nhau cá nhân.` : `Quan hệ HĐQT (nét xanh liền) và quan hệ do người dùng khai báo (nét xanh lá) đều là quan hệ trực tiếp.`}</div>`;

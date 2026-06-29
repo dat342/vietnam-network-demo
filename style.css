@@ -303,3 +303,9 @@ footer{margin-top:30px;color:var(--muted);font-size:12.5px;border-top:1px solid 
 .form-grid2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
 .form-grid2 .form-row{margin-bottom:0}
 @media(max-width:560px){ .form-grid2{grid-template-columns:1fr} }
+
+/* ===== Goi y cach ket noi ===== */
+.suggest{background:rgba(13,209,255,.08);border:1px solid rgba(13,209,255,.28);border-left:3px solid var(--accent2);
+  border-radius:12px;padding:13px 16px;margin-top:18px;font-size:13.5px;line-height:1.75}
+.suggest b{color:var(--ink)}
+.suggest .how{color:var(--muted)}
