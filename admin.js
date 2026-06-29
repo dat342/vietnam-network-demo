@@ -1,5 +1,5 @@
 /* ===== Trang quan tri tong ===== */
-import { requireAuth, renderAuthBar, esc, adminListUsers, adminListContribs,
+import { requireAuth, renderShell, esc, adminListUsers, adminListContribs,
          adminSetBlocked, adminDeleteUserData, adminDeleteContrib } from "./fb.js";
 
 const $ = id => document.getElementById(id);
@@ -7,7 +7,7 @@ let ME_UID = null;
 
 requireAuth(async (user, profile) => {
   ME_UID = user.uid;
-  renderAuthBar("authBar", profile, "admin");
+  renderShell("admin", profile);
   const ld = $("pageLoading"); if (ld) ld.remove();
   await render();
 }, { needAdmin: true });

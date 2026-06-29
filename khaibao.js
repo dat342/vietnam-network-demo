@@ -1,5 +1,5 @@
 /* ===== Trang khai bao quan he ===== */
-import { requireAuth, renderAuthBar, esc, avatarSm, relSelectHTML,
+import { requireAuth, renderShell, esc, avatarSm, relSelectHTML,
          loadAllContributions, getMyContribution, saveMyContribution } from "./fb.js";
 
 const $ = id => document.getElementById(id);
@@ -71,7 +71,7 @@ function wireContactAC(nameInput, acBox, badge) {
 }
 
 requireAuth(async (user, profile) => {
-  renderAuthBar("authBar", profile, "khaibao");
+  renderShell("khaibao", profile);
   $("meName").textContent = profile.displayName;
   let contribList = [];
   try { contribList = await loadAllContributions(); } catch (e) {}

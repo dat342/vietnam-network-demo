@@ -37,5 +37,5 @@ onAuth(async (user) => {
     const profile = await ensureProfile(user, pendingName);
     if (profile.blocked) { await logout(); redirecting = false; status("⛔ Tài khoản đã bị khoá.", "err"); return; }
   } catch (e) { redirecting = false; status("✕ " + mapAuthErr(e), "err"); return; }
-  location.replace("index.html");
+  location.replace("dashboard.html");
 });

@@ -1,10 +1,10 @@
 /* ===== Trang ca nhan: xem / sua / xoa khai bao cua minh ===== */
-import { requireAuth, renderAuthBar, esc, relIcon, getMyContribution, deleteMyContribution } from "./fb.js";
+import { requireAuth, renderShell, esc, relIcon, getMyContribution, deleteMyContribution } from "./fb.js";
 
 const $ = id => document.getElementById(id);
 
 requireAuth(async (user, profile) => {
-  renderAuthBar("authBar", profile, "toi");
+  renderShell("toi", profile);
   const ld = $("pageLoading"); if (ld) ld.remove();
   await render(user, profile);
 });

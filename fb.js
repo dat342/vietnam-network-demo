@@ -109,7 +109,41 @@ export async function adminDeleteUserData(uid) {
 }
 export async function adminDeleteContrib(uid) { await deleteDoc(doc(db,"contributions",uid)); }
 
-/* ---------- thanh dieu huong (link sang trang khac) ---------- */
+/* ---------- shell: sidebar + topbar (Base/Odoo style) ---------- */
+export function renderShell(active, profile) {
+  const parts = String(profile.displayName||"?").trim().split(/\s+/);
+  const av = esc(((parts[parts.length-2]||parts[0]||"?")[0] + (parts[parts.length-1]||"")[0]).toUpperCase());
+  const isAdmin = profile.role === "admin";
+  const item = (href, icon, label, key, soon) =>
+    soon ? `<span class="sb-link soon"><i class="ti ti-${icon}"></i>${label}<span class="soon-tag">sắp có</span></span>`
+         : `<a class="sb-link${active===key?" on":""}" href="${href}"><i class="ti ti-${icon}"></i>${label}</a>`;
+  const sb = document.getElementById("sidebar");
+  if (sb) sb.innerHTML = `
+    <div class="sb-logo"><i class="ti ti-network"></i>Mạng lưới VN</div>
+    ${item("dashboard.html","layout-dashboard","Tổng quan","dashboard")}
+    ${item("index.html","route","Tìm kết nối","index")}
+    ${item("","users-group","Tra cứu nhân sự","tracuu",true)}
+    ${item("","building-skyscraper","Danh bạ doanh nghiệp","danhba",true)}
+    ${item("","affiliate","Khám phá mạng lưới","khampha",true)}
+    <div class="sb-sec">Của bạn</div>
+    ${item("khaibao.html","user-plus","Khai báo quan hệ","khaibao")}
+    ${item("toi.html","user","Trang của tôi","toi")}
+    ${isAdmin ? `<div class="sb-sec">Quản trị</div>${item("admin.html","shield-lock","Quản trị tổng","admin")}` : ""}`;
+  const tb = document.getElementById("topbar");
+  if (tb) tb.innerHTML = `
+    <button class="tb-menu" id="tbMenu" aria-label="Mở menu"><i class="ti ti-menu-2"></i></button>
+    <div class="tb-search"><i class="ti ti-search"></i>Tìm người hoặc công ty…</div>
+    <div class="tb-right">
+      <div class="tb-user" title="${esc(profile.displayName)}">${av}</div>
+      <button class="tb-out" id="tbOut"><i class="ti ti-logout"></i>Đăng xuất</button>
+    </div>`;
+  const out = document.getElementById("tbOut");
+  if (out) out.onclick = () => logout().then(() => location.replace("login.html"));
+  const menu = document.getElementById("tbMenu");
+  if (menu && sb) menu.onclick = () => sb.classList.toggle("open");
+}
+
+/* ---------- thanh dieu huong cu (giu lai du phong) ---------- */
 export function renderAuthBar(barId, profile, current) {
   const bar = document.getElementById(barId);
   if (!bar) return;

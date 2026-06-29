@@ -1,18 +1,16 @@
 /* ===== Vietnam Business Network — demo "6 do phan cach" ===== */
 :root{
-  --bg:#060e24; --bg2:#0a1638; --card:#0f1f48; --card2:#152a5e;
-  --ink:#eaf1ff; --muted:#8ea4d2; --line:#21376f;
-  --accent:#004aef; --accent2:#0dd1ff; --person:#3d74ff; --company:#ffce00;
-  --strong:#0dd1ff; --weak:#8aa0d0; --ok:#0dd1ff; --warn:#ff8a8a;
-  --shadow:0 12px 40px rgba(0,0,0,.5);
+  --bg:#f4f6f9; --bg2:#ffffff; --card:#ffffff; --card2:#f6f8fb;
+  --ink:#1f2430; --muted:#6b7585; --line:#e4e8ee;
+  --accent:#004aef; --accent2:#0a84ff; --person:#3d74ff; --company:#e0a400;
+  --strong:#0a84ff; --weak:#9aa5bd; --ok:#16a34a; --warn:#dc2626; --user:#16a34a;
+  --shadow:0 1px 3px rgba(16,24,40,.08),0 1px 2px rgba(16,24,40,.05);
 }
 *{box-sizing:border-box}
 html,body{margin:0;padding:0}
 body{
   font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
-  background:radial-gradient(1200px 600px at 80% -10%,#0a3aa0 0%,transparent 60%),
-             radial-gradient(900px 500px at -10% 10%,#063a6e 0%,transparent 55%),
-             var(--bg);
+  background:var(--bg);
   color:var(--ink); line-height:1.5; min-height:100vh;
 }
 a{color:var(--accent2);text-decoration:none}
@@ -53,9 +51,9 @@ header p.sub{color:var(--muted);margin:0 0 14px;max-width:680px}
 .ac{position:absolute;z-index:30;left:0;right:0;top:100%;margin-top:4px;background:var(--card2);
   border:1px solid var(--line);border-radius:12px;max-height:280px;overflow:auto;box-shadow:var(--shadow);display:none}
 .ac.open{display:block}
-.ac-item{padding:9px 13px;cursor:pointer;border-bottom:1px solid rgba(255,255,255,.04)}
+.ac-item{padding:9px 13px;cursor:pointer;border-bottom:1px solid rgba(0,0,0,.06)}
 .ac-item:last-child{border-bottom:0}
-.ac-item:hover,.ac-item.hi{background:rgba(0,74,239,.28)}
+.ac-item:hover,.ac-item.hi{background:rgba(0,74,239,.08)}
 .ac-item .nm{font-weight:600}
 .ac-item .co{font-size:12px;color:var(--muted)}
 .ac-empty{padding:12px 13px;color:var(--muted);font-size:13px}
@@ -113,7 +111,7 @@ header p.sub{color:var(--muted);margin:0 0 14px;max-width:680px}
   background-size:8px 2px;background-image:repeating-linear-gradient(90deg,var(--weak) 0 4px,transparent 4px 8px)}
 .connector .arrow{color:var(--muted);font-size:13px;margin-top:2px}
 
-.note{background:rgba(0,74,239,.12);border:1px solid var(--line);border-radius:12px;padding:13px 15px;margin-top:18px;font-size:13.5px;color:var(--muted)}
+.note{background:rgba(0,74,239,.06);border:1px solid var(--line);border-radius:12px;padding:13px 15px;margin-top:18px;font-size:13.5px;color:var(--muted)}
 .note b{color:var(--ink)}
 .empty-msg{text-align:center;padding:34px 18px;color:var(--muted)}
 .empty-msg .big{font-size:17px;color:var(--ink);margin-bottom:8px;font-weight:700}
@@ -121,10 +119,10 @@ header p.sub{color:var(--muted);margin:0 0 14px;max-width:680px}
 /* Lower grid */
 .grid{display:grid;grid-template-columns:1.1fr 1fr;gap:18px;margin-top:24px}
 .card-h{font-size:14px;font-weight:800;letter-spacing:.4px;text-transform:uppercase;color:var(--muted);margin:0 0 12px}
-.stat-row{display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid rgba(255,255,255,.05);font-size:14px}
+.stat-row{display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid rgba(0,0,0,.06);font-size:14px}
 .stat-row:last-child{border-bottom:0}
 .stat-row b{font-size:16px}
-.bridge{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.05);cursor:pointer}
+.bridge{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid rgba(0,0,0,.06);cursor:pointer}
 .bridge:hover .bn{color:var(--accent2)}
 .bridge:last-child{border-bottom:0}
 .bridge .rank{width:22px;color:var(--muted);font-size:13px;text-align:right}
@@ -320,3 +318,54 @@ a.btn{text-decoration:none;display:inline-flex;align-items:center;justify-conten
 .ab-link{font-size:13px;color:var(--muted);padding:7px 11px;border-radius:9px;border:1px solid transparent;text-decoration:none;font-weight:600;white-space:nowrap}
 .ab-link:hover{color:var(--ink);border-color:var(--line)}
 .ab-link.on{color:#fff;background:var(--accent);border-color:var(--accent)}
+
+/* ===== Shell Base/Odoo: sidebar + topbar + content ===== */
+.layout{display:flex;min-height:100vh}
+.sidebar{width:228px;flex-shrink:0;background:var(--bg2);border-right:1px solid var(--line);
+  padding:14px 12px;display:flex;flex-direction:column;gap:2px;position:sticky;top:0;height:100vh;overflow-y:auto}
+.sb-logo{display:flex;align-items:center;gap:9px;padding:6px 10px 14px;font-weight:800;font-size:15px;color:var(--ink)}
+.sb-logo .ti{font-size:22px;color:var(--accent)}
+.sb-sec{font-size:11px;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);padding:12px 11px 5px;font-weight:700}
+.sb-link{display:flex;align-items:center;gap:11px;padding:9px 11px;border-radius:9px;font-size:13.5px;color:var(--muted);text-decoration:none;font-weight:600}
+.sb-link:hover{background:var(--card2);color:var(--ink)}
+.sb-link.on{background:rgba(0,74,239,.1);color:var(--accent)}
+.sb-link .ti{font-size:18px;flex-shrink:0}
+.sb-link.soon{opacity:.55;pointer-events:none}
+.sb-link .soon-tag{margin-left:auto;font-size:9px;background:var(--card2);border:1px solid var(--line);border-radius:5px;padding:1px 5px}
+.main{flex:1;min-width:0;display:flex;flex-direction:column}
+.topbar{display:flex;align-items:center;gap:12px;padding:10px 20px;border-bottom:1px solid var(--line);background:var(--bg2);position:sticky;top:0;z-index:20}
+.tb-menu{display:none;font-size:22px;color:var(--ink);cursor:pointer;background:none;border:0}
+.tb-search{flex:1;max-width:440px;display:flex;align-items:center;gap:8px;background:var(--card2);border:1px solid var(--line);border-radius:10px;padding:8px 12px;color:var(--muted);font-size:13.5px;cursor:text}
+.tb-search .ti{font-size:16px}
+.tb-right{margin-left:auto;display:flex;align-items:center;gap:12px}
+.tb-user{width:32px;height:32px;border-radius:50%;background:rgba(0,74,239,.1);color:var(--accent);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:12.5px}
+.tb-out{font-size:13px;color:var(--muted);cursor:pointer;background:none;border:0;display:flex;align-items:center;gap:5px;font-weight:600}
+.tb-out:hover{color:var(--warn)}
+.content{padding:22px 26px;max-width:1080px;width:100%;margin:0 auto}
+.page-title{font-size:21px;font-weight:800;margin:0 0 4px}
+.page-sub{color:var(--muted);font-size:13.5px;margin:0 0 18px}
+.page-title .g{background:linear-gradient(90deg,var(--accent),var(--accent2));-webkit-background-clip:text;background-clip:text;color:transparent}
+
+/* metric + quick cards (dashboard) */
+.stat-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(155px,1fr));gap:12px;margin-bottom:20px}
+.stat-card{background:var(--bg2);border:1px solid var(--line);border-radius:12px;padding:14px 16px}
+.stat-card .lbl{font-size:12.5px;color:var(--muted);display:flex;align-items:center;gap:6px}
+.stat-card .lbl .ti{font-size:15px;color:var(--accent)}
+.stat-card .val{font-size:26px;font-weight:800;margin-top:5px}
+.quick-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(195px,1fr));gap:12px}
+.quick{display:flex;align-items:center;gap:12px;background:var(--bg2);border:1px solid var(--line);border-radius:12px;padding:15px;text-decoration:none;color:var(--ink);transition:.15s}
+.quick:hover{border-color:var(--accent);box-shadow:var(--shadow);transform:translateY(-1px)}
+.quick .qi{width:40px;height:40px;border-radius:10px;background:rgba(0,74,239,.1);color:var(--accent);display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0}
+.quick .qt{font-weight:700;font-size:14px}
+.quick .qd{font-size:12px;color:var(--muted);margin-top:1px}
+
+/* panel sang hon (bo gradient toi) */
+.panel{background:var(--bg2)}
+.authbar{display:none}
+
+@media(max-width:820px){
+  .sidebar{position:fixed;left:-240px;z-index:50;transition:left .2s;box-shadow:0 8px 40px rgba(0,0,0,.2)}
+  .sidebar.open{left:0}
+  .tb-menu{display:block}
+  .content{padding:16px 14px}
+}
