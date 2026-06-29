@@ -41,7 +41,7 @@ async function loadAllContributions() {
   snap.forEach(d => {
     const x = d.data();
     if (!x.ownerName || !Array.isArray(x.contacts)) return; // bo qua ban ghi cu / khong hop le
-    out.push({ uid: d.id, user: x.ownerName, userTitle: x.title || "", contacts: x.contacts });
+    out.push({ uid: d.id, user: x.ownerName, userTitle: x.title || "", userDepartment: x.department || "", contacts: x.contacts });
   });
   if (window.VNNet) window.VNNet.applyContributions(out);
   return out;
@@ -50,9 +50,9 @@ async function getMyContribution() {
   const s = await getDoc(doc(db, "contributions", ME.uid));
   return s.exists() ? s.data() : null;
 }
-async function saveMyContribution(title, contacts) {
+async function saveMyContribution(title, department, contacts) {
   await setDoc(doc(db, "contributions", ME.uid), {
-    ownerUid: ME.uid, ownerName: MY_PROFILE.displayName, title, contacts, updatedAt: serverTimestamp(),
+    ownerUid: ME.uid, ownerName: MY_PROFILE.displayName, title, department, contacts, updatedAt: serverTimestamp(),
   });
 }
 async function deleteMyContribution() { await deleteDoc(doc(db, "contributions", ME.uid)); }
@@ -220,9 +220,13 @@ let declareModal = null;
 function buildDeclareModal() {
   let rows="";
   for(let i=0;i<3;i++) rows += `
-    <div class="contact-row" data-i="${i}">
-      <div class="cr-name field"><input class="cName" autocomplete="off" placeholder="Người quen #${i+1}"/><div class="ac cAc"></div><span class="cBadge"></span></div>
-      <input class="cTitle" autocomplete="off" placeholder="Chức vị (tuỳ chọn)"/>
+    <div class="contact-card" data-i="${i}">
+      <div class="cc-head">Người quen #${i+1}</div>
+      <div class="cr-name field"><input class="cName" autocomplete="off" placeholder="Họ tên — chọn có sẵn hoặc gõ tên mới"/><div class="ac cAc"></div><span class="cBadge"></span></div>
+      <div class="form-grid2">
+        <input class="cDept" autocomplete="off" placeholder="Phòng ban (tuỳ chọn)"/>
+        <input class="cTitle" autocomplete="off" placeholder="Chức vụ (tuỳ chọn)"/>
+      </div>
       ${relSelectHTML()}
     </div>`;
   const m = el(`
@@ -231,7 +235,10 @@ function buildDeclareModal() {
       <button class="modal-close" data-close>✕</button>
       <h2>➕ Khai báo / cập nhật quan hệ của bạn</h2>
       <p class="modal-sub">Node của bạn trong mạng lưới là <b id="dcMe"></b>. Khai báo tối đa 3 người bạn quen.</p>
-      <div class="form-row"><label>Chức vị / nghề của bạn (tuỳ chọn)</label><input id="dcTitle" placeholder="VD: Giám đốc Công ty X"/></div>
+      <div class="form-grid2">
+        <div class="form-row"><label>Phòng ban của bạn (tuỳ chọn)</label><input id="dcDept" placeholder="VD: Khối Kinh doanh"/></div>
+        <div class="form-row"><label>Chức vụ của bạn (tuỳ chọn)</label><input id="dcTitle" placeholder="VD: Trưởng phòng"/></div>
+      </div>
       <div class="contacts-head">Người bạn quen</div>
       <div id="dcRows">${rows}</div>
       <div class="modal-status" id="dcStatus"></div>
@@ -243,7 +250,7 @@ function buildDeclareModal() {
     <datalist id="relList">${REL.map(r=>`<option value="${esc(r)}">`).join("")}</datalist>
   </div>`);
   document.body.appendChild(m);
-  m.querySelectorAll(".contact-row").forEach(r => wireContactAC(r.querySelector(".cName"), r.querySelector(".cAc"), r.querySelector(".cBadge")));
+  m.querySelectorAll(".contact-card").forEach(r => wireContactAC(r.querySelector(".cName"), r.querySelector(".cAc"), r.querySelector(".cBadge")));
   m.querySelectorAll("[data-close]").forEach(b=>b.onclick=()=>m.classList.remove("open"));
   m.addEventListener("mousedown", e=>{ if(e.target===m) m.classList.remove("open"); });
   m.querySelector("#dcSave").onclick = saveDeclare;
@@ -256,12 +263,14 @@ async function openDeclareModal() {
   m.querySelector("#dcStatus").textContent = ""; m.querySelector("#dcStatus").className="modal-status";
   // prefill tu du lieu hien co
   let mine = null; try { mine = await getMyContribution(); } catch(e){}
-  m.querySelector("#dcTitle").value = (mine && mine.title) || MY_PROFILE.title || "";
-  const rows = m.querySelectorAll(".contact-row");
+  m.querySelector("#dcTitle").value = (mine && mine.title) || "";
+  m.querySelector("#dcDept").value = (mine && mine.department) || "";
+  const rows = m.querySelectorAll(".contact-card");
   rows.forEach((r,i) => {
     const c = mine && mine.contacts && mine.contacts[i];
     const nameI=r.querySelector(".cName"), badge=r.querySelector(".cBadge");
     nameI.value = c ? (c.name||"") : ""; nameI._code = c ? (c.code||null) : null;
+    r.querySelector(".cDept").value = c ? (c.department||"") : "";
     r.querySelector(".cTitle").value = c ? (c.title||"") : "";
     r.querySelector(".cRel").value = c ? (c.relationship||"") : "";
     badge.textContent = nameI._code ? "✓ có sẵn" : (nameI.value ? "＋ người mới" : "");
@@ -272,16 +281,18 @@ async function openDeclareModal() {
 async function saveDeclare() {
   const m = declareModal, status = m.querySelector("#dcStatus");
   const title = m.querySelector("#dcTitle").value.trim();
+  const department = m.querySelector("#dcDept").value.trim();
   const contacts = [];
-  m.querySelectorAll(".contact-row").forEach(r => {
+  m.querySelectorAll(".contact-card").forEach(r => {
     const name = r.querySelector(".cName").value.trim(); if(!name) return;
     contacts.push({ name, code: r.querySelector(".cName")._code||null,
+      department: r.querySelector(".cDept").value.trim(),
       title: r.querySelector(".cTitle").value.trim(), relationship: r.querySelector(".cRel").value.trim() });
   });
   if (!contacts.length) { status.textContent="⚠ Khai báo ít nhất 1 người quen."; status.className="modal-status err"; return; }
   const btn = m.querySelector("#dcSave"); btn.disabled=true; status.textContent="⏳ Đang lưu…"; status.className="modal-status";
   try {
-    await saveMyContribution(title, contacts);
+    await saveMyContribution(title, department, contacts);
     await loadAllContributions();
     status.textContent="✓ Đã lưu!"; status.className="modal-status ok";
     setTimeout(()=>{ m.classList.remove("open"); if(window.VNNet) window.VNNet.selectFrom("USR_"+ME.uid);
@@ -321,9 +332,12 @@ async function openMyPage() {
     body.querySelector("#myDeclare").onclick = () => { myPage.classList.remove("open"); openDeclareModal(); };
     return;
   }
-  const list = mine.contacts.map(c => `<div class="my-rel">
-      <div><b>${esc(c.name)}</b>${c.title?` <span class="muted">· ${esc(c.title)}</span>`:""}</div>
-      <div class="my-rel-tag">${relIcon(c.relationship)} ${esc(c.relationship||"quen biết")}</div></div>`).join("");
+  const list = mine.contacts.map(c => {
+    const sub = [c.title, c.department].filter(Boolean).map(esc).join(" · ");
+    return `<div class="my-rel">
+      <div><b>${esc(c.name)}</b>${sub?` <span class="muted">· ${sub}</span>`:""}</div>
+      <div class="my-rel-tag">${relIcon(c.relationship)} ${esc(c.relationship||"quen biết")}</div></div>`;
+  }).join("");
   body.innerHTML = head + `<div class="my-sec">Quan hệ bạn đã khai (${mine.contacts.length})</div>
     <div class="my-list">${list}</div>
     <div class="my-actions">

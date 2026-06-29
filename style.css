@@ -287,3 +287,19 @@ footer{margin-top:30px;color:var(--muted);font-size:12.5px;border-top:1px solid 
 .modal select{width:100%;background:var(--bg);border:1.5px solid var(--line);color:var(--ink);
   border-radius:10px;padding:10px 12px;font-size:13.5px;outline:none;cursor:pointer}
 .modal select:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(0,74,239,.16)}
+
+/* ===== Bo cuc doc (chuoi ket qua) + truong phong ban/chuc vu ===== */
+.chain.vertical{flex-direction:column;align-items:center;gap:0;row-gap:0}
+.chain.vertical .node{max-width:360px;width:100%}
+.chain.vertical .connector{min-width:auto;width:auto;flex-direction:column;align-items:center;padding:0;gap:5px}
+.chain.vertical .connector .line{width:2px;height:18px;margin:0;flex:none}
+.chain.vertical .connector.strong .line{background:linear-gradient(180deg,transparent,var(--strong),transparent)}
+.chain.vertical .connector.contrib .line{background:linear-gradient(180deg,transparent,var(--rel,var(--user)),transparent)}
+.chain.vertical .connector.weak .line{background-image:repeating-linear-gradient(180deg,var(--weak) 0 4px,transparent 4px 8px);background-size:2px 8px}
+
+/* the nguoi quen dang doc trong form khai bao */
+.contact-card{background:var(--card2);border:1px solid var(--line);border-radius:12px;padding:12px;margin-bottom:10px;display:flex;flex-direction:column;gap:8px}
+.cc-head{font-size:12px;font-weight:700;color:var(--muted)}
+.form-grid2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.form-grid2 .form-row{margin-bottom:0}
+@media(max-width:560px){ .form-grid2{grid-template-columns:1fr} }

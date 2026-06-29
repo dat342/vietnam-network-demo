@@ -132,8 +132,9 @@
   function personNodeHTML(id, i, ep) {
     const p = people[codeOf(id)];
     if (p.kind) { // nguoi dung them
-      const tag = p.kind === "user" ? ("🙋 " + esc(p.title || "Người dùng thêm"))
-                                     : ("➕ " + esc(p.title || "Người được thêm"));
+      const role = [p.title, p.department].filter(Boolean).map(esc).join(" · ");
+      const pre = p.kind === "user" ? "🙋 " : "➕ ";
+      const tag = pre + (role || (p.kind === "user" ? "Người dùng thêm" : "Người được thêm"));
       return `<div class="node person contrib${ep}" style="animation-delay:${i*70}ms">
         <div class="top">${avatarHTML(p)}
           <div><div class="nm">${esc(stripTitle(p.name))}</div></div></div>
@@ -173,7 +174,7 @@
         <div class="deg-badge"><span class="n">${hops}</span> bước kết nối</div>
         <div class="desc">${descr}</div>
       </div>
-      <div class="chain">`;
+      <div class="chain vertical">`;
 
     path.forEach((id, i) => {
       if (i > 0) {
@@ -181,7 +182,7 @@
         const cls = e.contrib ? "contrib" : (e.weak ? "weak" : "strong");
         const stl = e.color ? ` style="--rel:${esc(e.color)}"` : "";
         html += `<div class="connector ${cls}"${stl}>
-          <div class="lbl">${esc(e.text)}</div><div class="line"></div><div class="arrow">▸</div></div>`;
+          <div class="line"></div><div class="lbl">${esc(e.text)}</div><div class="line"></div></div>`;
       }
       const ep = (i === 0 || i === path.length - 1) ? " endpoint" : "";
       if (nodeIsPerson(id)) {
@@ -468,8 +469,8 @@
     for (const ct of list) {
       const uname = (ct.user||"").trim(); if (!uname) continue;
       const uCode = "USR_" + (ct.uid || norm(uname));
-      if (!people[uCode]) people[uCode] = { name: uname, companies: [], kind: "user", title: (ct.userTitle||"").trim() };
-      else if (ct.userTitle) people[uCode].title = (ct.userTitle||"").trim();
+      if (!people[uCode]) people[uCode] = { name: uname, companies: [], kind: "user", title: (ct.userTitle||"").trim(), department: (ct.userDepartment||"").trim() };
+      else { if (ct.userTitle) people[uCode].title = (ct.userTitle||"").trim(); if (ct.userDepartment) people[uCode].department = (ct.userDepartment||"").trim(); }
       synthCodes.add(uCode);
     }
     // pass 2: tao contact + canh
@@ -481,11 +482,11 @@
         let tCode = k.code;
         if (!tCode || !people[tCode]) {
           if (tCode && /^(USR_|EXT_)/.test(tCode)) {
-            people[tCode] = { name: cname, companies: [], kind: tCode.startsWith("USR_")?"user":"ext", title:(k.title||"").trim() };
+            people[tCode] = { name: cname, companies: [], kind: tCode.startsWith("USR_")?"user":"ext", title:(k.title||"").trim(), department:(k.department||"").trim() };
           } else {
             tCode = "EXT_" + norm(cname);
-            if (!people[tCode]) people[tCode] = { name: cname, companies: [], kind: "ext", title:(k.title||"").trim() };
-            else if (k.title && !people[tCode].title) people[tCode].title = (k.title||"").trim();
+            if (!people[tCode]) people[tCode] = { name: cname, companies: [], kind: "ext", title:(k.title||"").trim(), department:(k.department||"").trim() };
+            else { if (k.title && !people[tCode].title) people[tCode].title = (k.title||"").trim(); if (k.department && !people[tCode].department) people[tCode].department = (k.department||"").trim(); }
           }
           synthCodes.add(tCode);
         } else if (people[tCode].kind) {
