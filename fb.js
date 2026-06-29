@@ -127,7 +127,7 @@ export function renderShell(active, profile) {
     ${item("index.html","route","Tìm kết nối","index")}
     ${item("tracuu.html","users-group","Tra cứu nhân sự","tracuu")}
     ${item("danhba.html","building-skyscraper","Danh bạ doanh nghiệp","danhba")}
-    ${item("","affiliate","Khám phá mạng lưới","khampha",true)}
+    ${item("khampha.html","affiliate","Khám phá mạng lưới","khampha")}
     <div class="sb-sec">Của bạn</div>
     ${item("khaibao.html","user-plus","Khai báo quan hệ","khaibao")}
     ${item("toi.html","user","Trang của tôi","toi")}
