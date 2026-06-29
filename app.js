@@ -445,7 +445,7 @@
     // pass 1: tao node nguoi dung (USR_)
     for (const ct of list) {
       const uname = (ct.user||"").trim(); if (!uname) continue;
-      const uCode = "USR_" + norm(uname);
+      const uCode = "USR_" + (ct.uid || norm(uname));
       if (!people[uCode]) people[uCode] = { name: uname, companies: [], kind: "user", title: (ct.userTitle||"").trim() };
       else if (ct.userTitle) people[uCode].title = (ct.userTitle||"").trim();
       synthCodes.add(uCode);
@@ -453,7 +453,7 @@
     // pass 2: tao contact + canh
     for (const ct of list) {
       const uname = (ct.user||"").trim(); if (!uname) continue;
-      const uCode = "USR_" + norm(uname);
+      const uCode = "USR_" + (ct.uid || norm(uname));
       for (const k of (ct.contacts||[])) {
         const cname = (k.name||"").trim(); if (!cname) continue;
         let tCode = k.code;

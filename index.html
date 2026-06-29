@@ -9,6 +9,8 @@
 <body>
 <div class="wrap">
 
+  <div id="authBar" class="authbar"></div>
+
   <header>
     <h1>Mạng lưới <span class="g">quan hệ doanh nhân</span> Việt Nam</h1>
     <p class="sub">Nhập hai người — hệ thống tìm chuỗi kết nối ngắn nhất giữa họ qua các thành viên
@@ -71,10 +73,6 @@
     </div>
   </div>
 
-  <div class="cta-row">
-    <button class="btn cta" id="openSocialBtn">➕ Đăng nhập &amp; thêm quan hệ của bạn vào mạng lưới</button>
-    <span class="cta-hint">Khai báo bạn quen ai — hệ thống tìm đường qua chính bạn</span>
-  </div>
 
   <div id="result"></div>
 
@@ -106,6 +104,6 @@
 
 <script src="data.js"></script>
 <script src="app.js"></script>
-<script src="social.js"></script>
+<script type="module" src="social.js"></script>
 </body>
 </html>

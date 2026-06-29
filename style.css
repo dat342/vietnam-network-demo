@@ -208,3 +208,58 @@ footer{margin-top:30px;color:var(--muted);font-size:12.5px;border-top:1px solid 
   .contact-row{grid-template-columns:1fr}
   .cta-hint{display:none}
 }
+
+/* ===== Auth: thanh tai khoan + cong dang nhap + trang ca nhan + admin ===== */
+.btn.sm{padding:8px 14px;font-size:13px;border-radius:10px}
+.authbar{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;
+  background:linear-gradient(180deg,var(--card),var(--bg2));border:1px solid var(--line);
+  border-radius:14px;padding:10px 14px;margin-bottom:16px}
+.authbar:empty{display:none}
+.ab-hi{font-size:14px}
+.ab-actions{display:flex;gap:8px;flex-wrap:wrap}
+.ab-badge{background:var(--user);color:#062414;font-size:10px;font-weight:800;border-radius:5px;padding:1px 6px;letter-spacing:.5px;vertical-align:middle}
+
+/* gate */
+.gate-overlay{position:fixed;inset:0;z-index:200;display:flex;align-items:center;justify-content:center;padding:20px;
+  background:radial-gradient(1000px 500px at 70% -10%,#0a3aa0 0%,transparent 60%),var(--bg)}
+.gate-overlay.hidden{display:none}
+.gate-card{background:linear-gradient(180deg,var(--card),var(--bg2));border:1px solid var(--line);
+  border-radius:20px;padding:30px 26px;max-width:400px;width:100%;box-shadow:var(--shadow);text-align:center}
+.gate-logo{font-size:34px;margin-bottom:6px}
+.gate-card h2{margin:0 0 6px;font-size:20px}
+.gate-sub{color:var(--muted);font-size:13px;margin:0 0 20px}
+.gate-tabs{display:flex;gap:6px;background:var(--bg);border:1px solid var(--line);border-radius:12px;padding:4px;margin-bottom:16px}
+.gate-tabs .gt{flex:1;background:transparent;border:0;color:var(--muted);padding:9px;border-radius:9px;cursor:pointer;font-size:14px;font-weight:600}
+.gate-tabs .gt.on{background:var(--accent);color:#fff}
+.gate-card input{width:100%;background:var(--bg);border:1.5px solid var(--line);color:var(--ink);
+  border-radius:11px;padding:12px 14px;font-size:14.5px;outline:none;margin-bottom:10px;transition:border .15s}
+.gate-card input:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(0,74,239,.16)}
+.gate-card input::placeholder{color:#5e74a6}
+.gate-btn{width:100%;margin-top:4px}
+.gate-status{min-height:20px;font-size:13px;margin-top:12px;color:var(--muted)}
+.gate-status.err{color:#ff8a8a}
+
+/* modal rong cho admin */
+.modal-wide{max-width:720px}
+.muted{color:var(--muted);font-size:13px}
+
+/* trang cua toi */
+.my-profile{padding:12px 0;border-bottom:1px solid var(--line);margin-bottom:14px}
+.my-name{font-size:18px;font-weight:700}
+.my-empty{color:var(--muted);padding:18px 0;text-align:center}
+.my-sec,.admin-sec{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);margin:14px 0 10px}
+.my-list{display:flex;flex-direction:column;gap:8px}
+.my-rel{display:flex;justify-content:space-between;align-items:center;gap:10px;background:var(--card2);border:1px solid var(--line);border-radius:10px;padding:10px 13px;font-size:14px}
+.my-rel-tag{font-size:12px;color:var(--user);background:rgba(61,220,132,.1);border:1px solid rgba(61,220,132,.3);border-radius:999px;padding:3px 10px;white-space:nowrap}
+.my-actions{display:flex;gap:10px;margin-top:16px}
+.btn.danger,.btn.ghost.danger{color:#ff9a9a;border-color:rgba(255,138,138,.4)}
+.btn.ghost.danger:hover{border-color:#ff8a8a;background:rgba(255,80,80,.08)}
+
+/* admin */
+.admin-stats{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:6px}
+.ad-user{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;
+  background:var(--card2);border:1px solid var(--line);border-radius:11px;padding:11px 13px;margin-bottom:8px}
+.ad-u-main{min-width:0;flex:1}
+.ad-u-act{display:flex;gap:7px;flex-wrap:wrap}
+.ad-blocked{background:rgba(255,80,80,.15);color:#ff9a9a;font-size:10px;font-weight:800;border-radius:5px;padding:1px 6px;letter-spacing:.5px}
+@media(max-width:560px){ .ad-user{flex-direction:column;align-items:stretch} }
