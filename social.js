@@ -20,6 +20,18 @@ const db = getFirestore(app);
 const esc = s => String(s == null ? "" : s).replace(/[&<>"']/g, c =>
   ({ "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;", "'":"&#39;" }[c]));
 const el = (html) => { const t = document.createElement("template"); t.innerHTML = html.trim(); return t.content.firstChild; };
+const IMG_HOST = "https://cafef1.mediacdn.vn";
+const avatarSm = (p) => {
+  const parts = String(p.name||"?").trim().split(/\s+/);
+  const ini = esc(((parts[parts.length-2]||parts[0]||"?")[0] + (parts[parts.length-1]||"")[0]).toUpperCase());
+  const img = p.image ? `<img src="${IMG_HOST}${esc(p.image)}" loading="lazy" alt="" onerror="this.remove()">` : "";
+  return `<div class="avatar sm"><span class="ini">${ini}</span>${img}</div>`;
+};
+const relIcon = (label) => { const t=(window.VNNet&&window.VNNet.relTypes||[]).find(r=>r.label===label); return t?t.icon:"🤝"; };
+const relSelectHTML = () => {
+  const types = (window.VNNet&&window.VNNet.relTypes) ? window.VNNet.relTypes : REL.map(l=>({label:l,icon:""}));
+  return `<select class="cRel"><option value="">— Quan hệ —</option>${types.map(t=>`<option value="${esc(t.label)}">${t.icon?t.icon+" ":""}${esc(t.label)}</option>`).join("")}</select>`;
+};
 let ME = null, MY_PROFILE = null, PENDING_NAME = null;
 
 /* ---------- DATA ---------- */
@@ -184,7 +196,7 @@ function wireContactAC(nameInput, acBox, badge) {
     items = (window.VNNet ? window.VNNet.searchPeople(q, 30) : []);
     if (!q.trim()) { close(); return; }
     if (!items.length) { acBox.innerHTML = `<div class="ac-empty">Sẽ tạo người mới “${esc(q)}”</div>`; acBox.classList.add("open"); return; }
-    acBox.innerHTML = items.map((p,i)=>`<div class="ac-item" data-i="${i}"><div class="nm">${esc(p.name)}</div><div class="co">${esc(p.comp)}</div></div>`).join("");
+    acBox.innerHTML = items.map((p,i)=>`<div class="ac-item" data-i="${i}">${avatarSm(p)}<div class="ac-txt"><div class="nm">${esc(p.name)}</div><div class="co">${esc(p.comp)}</div></div></div>`).join("");
     acBox.classList.add("open"); hi=-1;
   };
   nameInput.addEventListener("input", () => { nameInput._code=null; setBadge(); search(nameInput.value); });
@@ -211,7 +223,7 @@ function buildDeclareModal() {
     <div class="contact-row" data-i="${i}">
       <div class="cr-name field"><input class="cName" autocomplete="off" placeholder="Người quen #${i+1}"/><div class="ac cAc"></div><span class="cBadge"></span></div>
       <input class="cTitle" autocomplete="off" placeholder="Chức vị (tuỳ chọn)"/>
-      <input class="cRel" autocomplete="off" list="relList" placeholder="Quan hệ"/>
+      ${relSelectHTML()}
     </div>`;
   const m = el(`
   <div class="modal-overlay" id="declareOverlay">
@@ -311,7 +323,7 @@ async function openMyPage() {
   }
   const list = mine.contacts.map(c => `<div class="my-rel">
       <div><b>${esc(c.name)}</b>${c.title?` <span class="muted">· ${esc(c.title)}</span>`:""}</div>
-      <div class="my-rel-tag">${esc(c.relationship||"quen biết")}</div></div>`).join("");
+      <div class="my-rel-tag">${relIcon(c.relationship)} ${esc(c.relationship||"quen biết")}</div></div>`).join("");
   body.innerHTML = head + `<div class="my-sec">Quan hệ bạn đã khai (${mine.contacts.length})</div>
     <div class="my-list">${list}</div>
     <div class="my-actions">

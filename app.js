@@ -17,6 +17,24 @@
   const nodeIsPerson = id => id[0] === "p";
   const codeOf = id => id.slice(2), symOf = id => id.slice(2);
   const companyLabel = sym => sym;
+  const IMG_HOST = "https://cafef1.mediacdn.vn";
+  function avatarHTML(p, extra) {
+    const ini = esc(initials(p.name || ""));
+    const img = p.image ? `<img src="${IMG_HOST}${esc(p.image)}" loading="lazy" alt="" onerror="this.remove()">` : "";
+    return `<div class="avatar ${extra||""}"><span class="ini">${ini}</span>${img}</div>`;
+  }
+  const REL_TYPES = [
+    { label:"Đồng nghiệp",        icon:"💼", color:"#0dd1ff" },
+    { label:"Gia đình / họ hàng", icon:"🏠", color:"#ff7eb6" },
+    { label:"Bạn bè",             icon:"🤝", color:"#3ddc84" },
+    { label:"Bạn học",            icon:"🎓", color:"#ffce00" },
+    { label:"Cấp trên (sếp)",     icon:"🔼", color:"#a78bfa" },
+    { label:"Cấp dưới",           icon:"🔽", color:"#a78bfa" },
+    { label:"Đối tác",            icon:"🔗", color:"#fb923c" },
+    { label:"Người quen",         icon:"👤", color:"#8aa0d0" },
+    { label:"Khác",               icon:"•",  color:"#8aa0d0" },
+  ];
+  const relInfo = (txt) => REL_TYPES.find(r => norm(r.label) === norm(txt||"")) || { icon:"🤝", color:"#3ddc84" };
 
   /* ---------- do thi (co the dung lai) ---------- */
   // node id: "p:"+code (nguoi), "c:"+sym (cong ty). Nguoi dung them: code "USR_xxx"/"EXT_xxx".
@@ -94,7 +112,8 @@
     const pa = nodeIsPerson(a), pb = nodeIsPerson(b);
     if (pa && pb) { // canh dong gop nguoi-nguoi
       const lbl = contribLabels.get(a + "|" + b) || contribLabels.get(b + "|" + a) || "quen biết";
-      return { text: "🤝 " + lbl, weak: false, contrib: true };
+      const info = relInfo(lbl);
+      return { text: info.icon + " " + lbl, weak: false, contrib: true, color: info.color };
     }
     if (pa !== pb) { // nguoi <-> cong ty
       const pid = pa ? a : b, cid = pa ? b : a;
@@ -116,13 +135,13 @@
       const tag = p.kind === "user" ? ("🙋 " + esc(p.title || "Người dùng thêm"))
                                      : ("➕ " + esc(p.title || "Người được thêm"));
       return `<div class="node person contrib${ep}" style="animation-delay:${i*70}ms">
-        <div class="top"><div class="avatar">${esc(initials(p.name))}</div>
+        <div class="top">${avatarHTML(p)}
           <div><div class="nm">${esc(stripTitle(p.name))}</div></div></div>
         <div class="tag">${tag}</div></div>`;
     }
     const nc = p.companies.length;
     return `<div class="node person${ep}" style="animation-delay:${i*70}ms">
-      <div class="top"><div class="avatar">${esc(initials(p.name))}</div>
+      <div class="top">${avatarHTML(p)}
         <div><div class="nm">${esc(stripTitle(p.name))}</div></div></div>
       <div class="tag">${nc} doanh nghiệp${nc>1?" · cầu nối":""}</div></div>`;
   }
@@ -160,7 +179,8 @@
       if (i > 0) {
         const e = edgeLabel(path[i-1], id);
         const cls = e.contrib ? "contrib" : (e.weak ? "weak" : "strong");
-        html += `<div class="connector ${cls}">
+        const stl = e.color ? ` style="--rel:${esc(e.color)}"` : "";
+        html += `<div class="connector ${cls}"${stl}>
           <div class="lbl">${esc(e.text)}</div><div class="line"></div><div class="arrow">▸</div></div>`;
       }
       const ep = (i === 0 || i === path.length - 1) ? " endpoint" : "";
@@ -194,6 +214,7 @@
         code,
         name: nm,
         raw: p.name,
+        image: p.image || "",
         comp: p.kind ? (p.kind === "user" ? "🙋 Bạn (người dùng thêm)" : "➕ Người được thêm")
                      : (p.companies || []).join(", "),
         key: norm(nm),
@@ -224,7 +245,7 @@
       ac.innerHTML = items.map((p, i) => {
         const comp = p.kind ? esc(p.comp)
           : (people[p.code].companies || []).map(s => s === filterSym ? `<b>${esc(s)}</b>` : esc(s)).join(", ");
-        return `<div class="ac-item" data-i="${i}"><div class="nm">${esc(p.name)}</div><div class="co">${comp}</div></div>`;
+        return `<div class="ac-item" data-i="${i}">${avatarHTML(p,"sm")}<div class="ac-txt"><div class="nm">${esc(p.name)}</div><div class="co">${comp}</div></div></div>`;
       }).join("");
       ac.classList.add("open"); hi = -1;
     }
@@ -342,7 +363,8 @@
   document.getElementById("bridges").innerHTML = bridges.slice(0, 14).map((x, i) =>
     `<div class="bridge" data-code="${x.code}">
       <div class="rank">${i+1}</div>
-      <div><div class="bn">${esc(stripTitle(x.p.name))}</div>
+      ${avatarHTML(x.p,"sm")}
+      <div class="bridge-info"><div class="bn">${esc(stripTitle(x.p.name))}</div>
            <div class="bc">${esc(x.p.companies.join(" · "))}</div></div>
       <div class="cnt">${x.p.companies.length} cty</div>
     </div>`).join("");
@@ -483,11 +505,12 @@
   window.VNNet = {
     norm,
     applyContributions,
+    relTypes: REL_TYPES,
     searchPeople(q, limit = 20) {
       const nq = norm(q);
       if (!nq) return [];
       return peopleList.filter(p => p.key.includes(nq)).slice(0, limit)
-        .map(p => ({ code: p.code, name: p.name, comp: p.comp, kind: p.kind }));
+        .map(p => ({ code: p.code, name: p.name, comp: p.comp, kind: p.kind, image: p.image }));
     },
     selectFrom(code){ fromAC.set(code); },
     findFromTo(fromCode, toCode){ fromAC.set(fromCode); if (toCode) toAC.set(toCode); doFind(); },

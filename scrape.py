@@ -72,6 +72,7 @@ def fetch_leaders(symbol):
                 'raw_name': p.get('Name', '').strip(),
                 'position': p.get('Position', '').strip(),
                 'group': gname,
+                'image': (p.get('Image') or '').strip(),
             })
     return out
 
@@ -94,10 +95,12 @@ def main():
         for L in leaders:
             c = L['code']
             companies[sym]['members'].add(c)
-            pr = people.setdefault(c, {'name': L['name'], 'positions': {}, 'companies': set()})
+            pr = people.setdefault(c, {'name': L['name'], 'positions': {}, 'companies': set(), 'image': ''})
             pr['companies'].add(sym)
             # giu chuc vu (uu tien dong dau tien gap o moi cong ty)
             pr['positions'].setdefault(sym, L['position'])
+            if L.get('image') and not pr['image']:  # luu anh dau tien co
+                pr['image'] = L['image']
             if len(L['name']) > len(pr['name']):  # ten day du hon
                 pr['name'] = L['name']
         print(f"[{i:>3}/{len(SYMBOLS)}] {sym:5} OK  {len(leaders)} nguoi", file=sys.stderr)
@@ -109,6 +112,7 @@ def main():
         'name': v['name'],
         'companies': sorted(v['companies']),
         'positions': v['positions'],
+        'image': v.get('image', ''),
     } for c, v in people.items()}
     companies_out = {s: {'members': sorted(v['members'])} for s, v in companies.items()}
 
