@@ -22,11 +22,10 @@ function buildIndex(contribList) {
 }
 const searchPeople = (q, limit = 30) => { const nq = norm(q); return nq ? PEOPLE.filter(p => p.key.includes(nq)).slice(0, limit) : []; };
 
-function buildRows() {
-  let rows = "";
-  for (let i = 0; i < 3; i++) rows += `
-    <div class="contact-card" data-i="${i}">
-      <div class="cc-head">Người quen #${i+1}</div>
+function cardTemplate() {
+  return `
+    <div class="contact-card">
+      <div class="cc-head"><span class="cc-num">Người quen</span><button type="button" class="cc-remove" title="Xoá người này">✕</button></div>
       <div class="cr-name field"><input class="cName" autocomplete="off" placeholder="Họ tên — chọn có sẵn hoặc gõ tên mới"/><div class="ac cAc"></div><span class="cBadge"></span></div>
       <div class="form-grid2">
         <input class="cDept" autocomplete="off" placeholder="Phòng ban (tuỳ chọn)"/>
@@ -38,9 +37,37 @@ function buildRows() {
       </div>
       ${relSelectHTML()}
     </div>`;
-  $("dcRows").innerHTML = rows;
-  document.querySelectorAll(".contact-card").forEach(r =>
-    wireContactAC(r.querySelector(".cName"), r.querySelector(".cAc"), r.querySelector(".cBadge")));
+}
+function renumber() {
+  const cards = document.querySelectorAll(".contact-card");
+  cards.forEach((c, i) => {
+    c.querySelector(".cc-num").textContent = "Người quen #" + (i + 1);
+    c.querySelector(".cc-remove").style.display = cards.length > 1 ? "" : "none";
+  });
+}
+function addCard(data) {
+  const t = document.createElement("template");
+  t.innerHTML = cardTemplate().trim();
+  const el = t.content.firstChild;
+  $("dcRows").appendChild(el);
+  wireContactAC(el.querySelector(".cName"), el.querySelector(".cAc"), el.querySelector(".cBadge"));
+  el.querySelector(".cc-remove").onclick = () => {
+    if (document.querySelectorAll(".contact-card").length > 1) { el.remove(); renumber(); }
+  };
+  if (data) {
+    const ni = el.querySelector(".cName");
+    ni.value = data.name || ""; ni._code = data.code || null;
+    el.querySelector(".cDept").value = data.department || "";
+    el.querySelector(".cTitle").value = data.title || "";
+    el.querySelector(".cStart").value = data.startYear || "";
+    el.querySelector(".cEnd").value = data.endYear || "";
+    el.querySelector(".cRel").value = data.relationship || "";
+    const b = el.querySelector(".cBadge");
+    b.textContent = ni._code ? "✓ có sẵn" : (ni.value ? "＋ người mới" : "");
+    b.className = "cBadge" + (ni._code ? " known" : (ni.value ? " nw" : ""));
+  }
+  renumber();
+  return el;
 }
 
 function wireContactAC(nameInput, acBox, badge) {
@@ -80,25 +107,16 @@ requireAuth(async (user, profile) => {
   let contribList = [];
   try { contribList = await loadAllContributions(); } catch (e) {}
   buildIndex(contribList);
-  buildRows();
-  // prefill
+  // prefill: 1 the trong, hoac 1 the cho moi nguoi quen da khai
   let mine = null; try { mine = await getMyContribution(user.uid); } catch (e) {}
   $("dcTitle").value = (mine && mine.title) || "";
   $("dcDept").value = (mine && mine.department) || "";
   $("dcStart").value = (mine && mine.startYear) || "";
   $("dcEnd").value = (mine && mine.endYear) || "";
-  document.querySelectorAll(".contact-card").forEach((r, i) => {
-    const c = mine && mine.contacts && mine.contacts[i];
-    const nameI = r.querySelector(".cName"), badge = r.querySelector(".cBadge");
-    nameI.value = c ? (c.name||"") : ""; nameI._code = c ? (c.code||null) : null;
-    r.querySelector(".cDept").value = c ? (c.department||"") : "";
-    r.querySelector(".cTitle").value = c ? (c.title||"") : "";
-    r.querySelector(".cStart").value = c ? (c.startYear||"") : "";
-    r.querySelector(".cEnd").value = c ? (c.endYear||"") : "";
-    r.querySelector(".cRel").value = c ? (c.relationship||"") : "";
-    badge.textContent = nameI._code ? "✓ có sẵn" : (nameI.value ? "＋ người mới" : "");
-    badge.className = "cBadge" + (nameI._code ? " known" : (nameI.value ? " nw" : ""));
-  });
+  $("dcRows").innerHTML = "";
+  if (mine && mine.contacts && mine.contacts.length) mine.contacts.forEach(c => addCard(c));
+  else addCard();
+  $("addContact").onclick = () => addCard();
   const ld = $("pageLoading"); if (ld) ld.remove();
 
   $("dcSave").onclick = async () => {
