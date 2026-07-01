@@ -5,11 +5,19 @@ requireAuth(async (user, profile) => {
   renderShell("dashboard", profile);
   const ld = document.getElementById("pageLoading"); if (ld) ld.remove();
 
-  const D = window.GRAPH_DATA || { companies: {}, people: {} };
-  const ncomp = Object.keys(D.companies).length;
-  const npeople = Object.keys(D.people).length;
-  let bridges = 0;
-  for (const c in D.people) if ((D.people[c].companies || []).length >= 2) bridges++;
+  // Chi so lieu tong hop (graph-stats.js ~200 byte) thay vi keo ca do thi 380KB.
+  // Fallback ve GRAPH_DATA neu vi ly do nao do stats khong nap duoc.
+  const S = window.GRAPH_STATS;
+  let ncomp, npeople, bridges;
+  if (S) {
+    ncomp = S.companies; npeople = S.people; bridges = S.bridges;
+  } else {
+    const D = window.GRAPH_DATA || { companies: {}, people: {} };
+    ncomp = Object.keys(D.companies).length;
+    npeople = Object.keys(D.people).length;
+    bridges = 0;
+    for (const c in D.people) if ((D.people[c].companies || []).length >= 2) bridges++;
+  }
   let myCount = 0;
   try { const m = await getMyContribution(user.uid); myCount = m && m.contacts ? m.contacts.length : 0; } catch (e) {}
 

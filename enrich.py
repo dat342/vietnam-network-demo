@@ -62,6 +62,18 @@ def main():
     # cap nhat lai data.json (co them sector/group)
     json.dump(d, open('data.json', 'w', encoding='utf-8'), ensure_ascii=False, indent=1)
 
+    # file thong ke nhe cho trang dashboard (khong can keo ca do thi ~380KB)
+    stats = {
+        "companies": len(d['companies']),
+        "people": len(d['people']),
+        "bridges": d['meta'].get('total_bridges',
+                    sum(1 for p in d['people'].values() if len(p.get('companies', [])) >= 2)),
+        "generated_at": d['meta'].get('generated_at', ''),
+    }
+    with open('graph-stats.js', 'w', encoding='utf-8') as f:
+        f.write("// Tu dong sinh boi enrich.py - chi so lieu tong hop cho dashboard\n")
+        f.write("window.GRAPH_STATS = " + json.dumps(stats, ensure_ascii=False) + ";\n")
+
     print(f"OK -> data.js ({len(js)} bytes)", file=sys.stderr)
     print(f"   {len(d['companies'])} cong ty, {len(d['people'])} nguoi", file=sys.stderr)
     # thong ke nganh

@@ -1,0 +1,68 @@
+// ============================================================================
+// Firestore Security Rules — Mạng lưới quan hệ doanh nhân VN
+//
+// BẢN THAM CHIẾU đưa vào repo để tài liệu hoá lớp bảo mật (web tĩnh không có
+// backend nên toàn bộ kiểm soát nằm ở đây). So sánh với rules đang chạy trong
+// Firebase Console (Firestore Database → Rules) và cập nhật cho khớp.
+//
+// Nguyên tắc:
+//  - Chưa đăng nhập: không đọc/ghi gì.
+//  - users/{uid}:  mỗi người tự đọc/sửa hồ sơ của mình, NHƯNG không được tự
+//                  phong 'admin' hay tự gỡ 'blocked'. Admin làm mọi thứ.
+//  - contributions/{uid}: mọi người đã đăng nhập được đọc (để dựng đồ thị),
+//                  nhưng chỉ chủ sở hữu mới ghi/xoá bản của mình. Admin mọi thứ.
+// ============================================================================
+
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function signedIn() {
+      return request.auth != null;
+    }
+    function isSelf(uid) {
+      return signedIn() && request.auth.uid == uid;
+    }
+    function isAdmin() {
+      return signedIn()
+        && exists(/databases/$(database)/documents/users/$(request.auth.uid))
+        && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+    }
+
+    // ---- Hồ sơ người dùng ----
+    match /users/{uid} {
+      allow read: if isSelf(uid) || isAdmin();
+
+      // Tạo hồ sơ lần đầu: chỉ chính mình, bắt buộc role='user', blocked=false.
+      allow create: if isSelf(uid)
+        && request.resource.data.role == 'user'
+        && request.resource.data.blocked == false;
+
+      // Tự cập nhật: KHÔNG được đổi role hoặc blocked của chính mình.
+      allow update: if (isSelf(uid)
+          && request.resource.data.role == resource.data.role
+          && request.resource.data.blocked == resource.data.blocked)
+        || isAdmin();
+
+      allow delete: if isAdmin();
+    }
+
+    // ---- Đóng góp quan hệ ----
+    match /contributions/{uid} {
+      // Đồ thị tìm đường cần đọc toàn bộ đóng góp của mọi người.
+      allow read: if signedIn();
+
+      // Chỉ chủ sở hữu ghi bản của mình; ownerUid phải trùng uid tài liệu.
+      allow create, update: if (isSelf(uid)
+          && request.resource.data.ownerUid == uid)
+        || isAdmin();
+
+      allow delete: if isSelf(uid) || isAdmin();
+    }
+
+    // Mặc định: chặn hết những gì không khớp ở trên.
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

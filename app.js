@@ -26,7 +26,7 @@
   const REL_TYPES = [
     { label:"Đồng nghiệp",        icon:"💼", color:"#0dd1ff" },
     { label:"Gia đình / họ hàng", icon:"🏠", color:"#ff7eb6" },
-    { label:"Bạn bè",             icon:"🤝", color:"#3ddc84" },
+    { label:"Bạn bè",             icon:"🤝", color:"#07ef9c" },
     { label:"Bạn học",            icon:"🎓", color:"#ffce00" },
     { label:"Cấp trên (sếp)",     icon:"🔼", color:"#a78bfa" },
     { label:"Cấp dưới",           icon:"🔽", color:"#a78bfa" },
@@ -34,7 +34,7 @@
     { label:"Người quen",         icon:"👤", color:"#8aa0d0" },
     { label:"Khác",               icon:"•",  color:"#8aa0d0" },
   ];
-  const relInfo = (txt) => REL_TYPES.find(r => norm(r.label) === norm(txt||"")) || { icon:"🤝", color:"#3ddc84" };
+  const relInfo = (txt) => REL_TYPES.find(r => norm(r.label) === norm(txt||"")) || { icon:"🤝", color:"#07ef9c" };
 
   /* ---------- do thi (co the dung lai) ---------- */
   // node id: "p:"+code (nguoi), "c:"+sym (cong ty). Nguoi dung them: code "USR_xxx"/"EXT_xxx".
@@ -180,10 +180,16 @@
       resultEl.innerHTML = `<div class="panel empty-msg">
         <div class="big">😕 Chưa tìm thấy đường kết nối</div>
         <div>Hai người này hiện thuộc hai cụm mạng lưới tách biệt.
-        ${allowWeak ? "" : "Hãy thử bật <b>“Kết nối mở rộng”</b> ở trên để nối thêm liên kết cùng ngành / tập đoàn."}</div>
+        ${allowWeak ? "" : "Hãy thử bật <b>“Kết nối mở rộng”</b> để nối thêm liên kết cùng ngành / tập đoàn."}</div>
         <div style="margin-top:10px">Từ <b>${esc(stripTitle(people[from].name))}</b> hiện có thể với tới
         <b>${r.toLocaleString("vi")}</b> người trong mạng lưới${allowWeak ? "" : " (chế độ quan hệ thật)"}.</div>
+        <div class="cta-row" style="margin-top:18px">
+          ${allowWeak ? "" : `<button class="btn sm" id="expandRetryBtn" type="button"><i class="ti ti-arrows-maximize"></i> Bật kết nối mở rộng &amp; thử lại</button>`}
+          <a class="btn ghost sm" href="khaibao.html"><i class="ti ti-user-plus"></i> Khai báo quan hệ để mở đường</a>
+        </div>
       </div>`;
+      const er = document.getElementById("expandRetryBtn");
+      if (er) er.onclick = () => { const w = document.getElementById("weakToggle"); w.checked = true; doFind(); };
       return;
     }
 
@@ -200,6 +206,7 @@
       <div class="headline">
         <div class="deg-badge"><span class="n">${hops}</span> bước kết nối</div>
         <div class="desc">${descr}</div>
+        <button class="btn ghost sm" id="shareBtn" type="button" style="margin-left:auto"><i class="ti ti-share"></i> Chia sẻ</button>
       </div>
       <div class="chain vertical">`;
 
@@ -234,6 +241,31 @@
       ${usedWeak ? `Chuỗi này có dùng <b>liên kết mở rộng</b> (nét đứt — cùng ngành/tập đoàn), không hàm ý hai bên quen nhau cá nhân.` : `Quan hệ HĐQT (nét xanh liền) và quan hệ do người dùng khai báo (nét xanh lá) đều là quan hệ trực tiếp.`}</div>`;
     html += `</div>`;
     resultEl.innerHTML = html;
+
+    const shareBtn = document.getElementById("shareBtn");
+    if (shareBtn) shareBtn.onclick = () => shareChain(path, from, to, hops);
+  }
+
+  /* ---------- chia se chuoi ket noi ---------- */
+  function chainToText(path) {
+    return path.map(id => nodeIsPerson(id)
+      ? stripTitle(people[codeOf(id)].name)
+      : "[" + symOf(id) + "]").join(" → ");
+  }
+  function shareChain(path, from, to, hops) {
+    const nf = stripTitle(people[from].name), nt = stripTitle(people[to].name);
+    const url = location.origin + location.pathname
+      + "?from=" + encodeURIComponent(from) + "&to=" + encodeURIComponent(to);
+    const text = `🔗 ${nf} ↔ ${nt}: ${hops} bước kết nối\n${chainToText(path)}\n${url}`;
+    if (navigator.share) { navigator.share({ title: "Mạng lưới quan hệ doanh nhân VN", text }).catch(() => {}); return; }
+    const done = (ok) => {
+      const b = document.getElementById("shareBtn"); if (!b) return;
+      const o = b.innerHTML;
+      b.innerHTML = ok ? '<i class="ti ti-check"></i> Đã copy' : '<i class="ti ti-copy"></i> Copy thủ công';
+      setTimeout(() => { b.innerHTML = o; }, 1600);
+    };
+    if (navigator.clipboard) navigator.clipboard.writeText(text).then(() => done(true)).catch(() => { prompt("Sao chép chuỗi:", text); });
+    else prompt("Sao chép chuỗi:", text);
   }
 
   /* ---------- danh sach tim kiem (co the dung lai) ---------- */

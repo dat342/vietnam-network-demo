@@ -8,7 +8,12 @@ requireAuth(async (user, profile) => {
     const list = await loadAllContributions();
     if (window.VNNet) window.VNNet.applyContributions(list);
   } catch (e) { console.warn("load contributions:", e); }
-  if (window.VNNet) window.VNNet.selectFrom("USR_" + user.uid);
-  const to = new URLSearchParams(location.search).get("to");
-  if (to && window.VNNet) window.VNNet.selectTo(to);
+  const params = new URLSearchParams(location.search);
+  const from = params.get("from");
+  const to = params.get("to");
+  if (window.VNNet) {
+    // mac dinh chon chinh minh; neu mo tu link chia se (co ?from=) thi chon dung nguoi do
+    window.VNNet.selectFrom(from || "USR_" + user.uid);
+    if (to) window.VNNet.selectTo(to);
+  }
 });
