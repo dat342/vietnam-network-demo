@@ -134,6 +134,12 @@ requireAuth(async (user, profile) => {
         relationship: r.querySelector(".cRel").value.trim() });
     });
     if (!contacts.length) { status.textContent = "⚠ Khai báo ít nhất 1 người quen."; status.className = "modal-status err"; return; }
+    // kiem tra nam hop le (1900-2100, bat dau <= ket thuc)
+    const badYear = y => y && (!/^\d{4}$/.test(y) || +y < 1900 || +y > 2100);
+    const badRange = (s, e) => s && e && /^\d{4}$/.test(s) && /^\d{4}$/.test(e) && +s > +e;
+    const yearErr = [startYear, endYear].some(badYear) || badRange(startYear, endYear)
+      || contacts.some(c => badYear(c.startYear) || badYear(c.endYear) || badRange(c.startYear, c.endYear));
+    if (yearErr) { status.textContent = "⚠ Năm không hợp lệ (nhập 4 chữ số, 1900–2100, năm bắt đầu ≤ năm kết thúc)."; status.className = "modal-status err"; return; }
     const btn = $("dcSave"); btn.disabled = true; status.textContent = "⏳ Đang lưu…"; status.className = "modal-status";
     try {
       await saveMyContribution(user.uid, profile.displayName, { title, department, startYear, endYear, contacts });

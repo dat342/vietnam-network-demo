@@ -20,6 +20,8 @@ requireAuth(async (user, profile) => {
   if (!window.vis) { $("graph").innerHTML = `<div class="muted" style="padding:30px;text-align:center">Không tải được thư viện đồ thị (mạng?). Tải lại trang giúp.</div>`; return; }
 
   setupSearch();
+  const fit = $("fitBtn");
+  if (fit) fit.onclick = () => { if (network) network.fit({ animation: { duration: 400 } }); };
   // tam chon: chinh ban (neu da khai bao) hoac 1 doanh nhan noi tieng
   let start = "USR_" + user.uid;
   if (!contribPeople[start]) start = findCode("Trương Gia Bình") || Object.keys(D.people)[0];
@@ -72,7 +74,7 @@ function renderEgo(centerCode) {
   // quan he nguoi dung khai (contrib)
   for (const nb of (contribAdj[centerCode] || [])) {
     if (nodesMap.size >= MAX_NODES) break;
-    const nid = addP(nb); edges.push({ from: cId, to: nid, dashes: true, color: { color: "#16a34a" } });
+    const nid = addP(nb); edges.push({ from: cId, to: nid, dashes: true, color: { color: "#07c98a" } });
   }
 
   const data = {
@@ -80,14 +82,14 @@ function renderEgo(centerCode) {
     edges: new vis.DataSet(edges.map((e, i) => ({ id: i, ...e }))),
   };
   const options = {
-    nodes: { shape: "dot", size: 15, borderWidth: 2, font: { size: 13, color: "#1f2430" } },
+    nodes: { shape: "dot", size: 15, borderWidth: 2, font: { size: 13, color: "#161b2e" } },
     groups: {
       center: { color: { background: "#004aef", border: "#0036b0" }, font: { color: "#fff" }, size: 26 },
-      person: { color: { background: "#cfe0ff", border: "#3d74ff" } },
-      user:   { color: { background: "#c8f0d8", border: "#16a34a" } },
-      company:{ shape: "box", color: { background: "#ffe9b3", border: "#e0a400" }, font: { color: "#5a4500" } },
+      person: { color: { background: "#dce7ff", border: "#4d80ff" } },
+      user:   { color: { background: "#d6fbec", border: "#07c98a" } },
+      company:{ shape: "box", color: { background: "#fff1bf", border: "#d9ab00" }, font: { color: "#5a4500" } },
     },
-    edges: { color: { color: "#cbd5e6" }, width: 1.5, smooth: { type: "continuous" } },
+    edges: { color: { color: "#c8d2e6" }, width: 1.5, smooth: { type: "continuous" } },
     physics: { stabilization: { iterations: 150 }, barnesHut: { springLength: 130, gravitationalConstant: -4000 } },
     interaction: { hover: true, tooltipDelay: 120 },
   };
@@ -112,12 +114,12 @@ function renderCompany(sym) {
   }
   const data = { nodes: new vis.DataSet([...nodesMap.values()]), edges: new vis.DataSet(edges.map((e,i)=>({id:i,...e}))) };
   const options = {
-    nodes: { shape: "dot", size: 15, borderWidth: 2, font: { size: 13, color: "#1f2430" } },
+    nodes: { shape: "dot", size: 15, borderWidth: 2, font: { size: 13, color: "#161b2e" } },
     groups: {
       center: { shape: "box", color: { background: "#004aef", border: "#0036b0" }, font: { color: "#fff", size: 16 }, size: 26 },
-      person: { color: { background: "#cfe0ff", border: "#3d74ff" } },
+      person: { color: { background: "#dce7ff", border: "#4d80ff" } },
     },
-    edges: { color: { color: "#cbd5e6" }, width: 1.5, smooth: { type: "continuous" } },
+    edges: { color: { color: "#c8d2e6" }, width: 1.5, smooth: { type: "continuous" } },
     physics: { stabilization: { iterations: 150 }, barnesHut: { springLength: 130 } },
     interaction: { hover: true },
   };

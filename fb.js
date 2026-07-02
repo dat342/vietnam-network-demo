@@ -1,7 +1,7 @@
 /* ===== Module dung chung: Firebase + auth + data + dieu huong (cho cac trang) ===== */
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getAuth, onAuthStateChanged, createUserWithEmailAndPassword,
-         signInWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+         signInWithEmailAndPassword, signOut, sendPasswordResetEmail } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 import { getFirestore, doc, getDoc, setDoc, deleteDoc, updateDoc,
          collection, getDocs, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
@@ -42,6 +42,7 @@ export const relSelectHTML = () =>
 export function onAuth(cb) { return onAuthStateChanged(auth, cb); }
 export const login = (email, pw) => signInWithEmailAndPassword(auth, email, pw);
 export const register = (email, pw) => createUserWithEmailAndPassword(auth, email, pw);
+export const resetPassword = (email) => sendPasswordResetEmail(auth, email);
 export const logout = () => signOut(auth);
 export function mapAuthErr(e) {
   const c = (e && e.code) || "";
@@ -135,7 +136,7 @@ export function renderShell(active, profile) {
   const tb = document.getElementById("topbar");
   if (tb) tb.innerHTML = `
     <button class="tb-menu" id="tbMenu" aria-label="Mở menu"><i class="ti ti-menu-2"></i></button>
-    <div class="tb-search"><i class="ti ti-search"></i>Tìm người hoặc công ty…</div>
+    <button class="tb-search" id="tbSearch" type="button"><i class="ti ti-search"></i>Tìm kết nối giữa 2 người…</button>
     <div class="tb-right">
       <div class="tb-user" title="${esc(profile.displayName)}">${av}</div>
       <button class="tb-out" id="tbOut"><i class="ti ti-logout"></i>Đăng xuất</button>
@@ -144,6 +145,8 @@ export function renderShell(active, profile) {
   if (out) out.onclick = () => logout().then(() => location.replace("login.html"));
   const menu = document.getElementById("tbMenu");
   if (menu && sb) menu.onclick = () => sb.classList.toggle("open");
+  const search = document.getElementById("tbSearch");
+  if (search) search.onclick = () => { location.href = "index.html"; };
 }
 
 /* ---------- thanh dieu huong cu (giu lai du phong) ---------- */

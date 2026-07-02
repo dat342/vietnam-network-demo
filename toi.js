@@ -1,5 +1,5 @@
 /* ===== Trang ca nhan: xem / sua / xoa khai bao cua minh ===== */
-import { requireAuth, renderShell, esc, relIcon, getMyContribution, deleteMyContribution } from "./fb.js";
+import { requireAuth, renderShell, esc, relIcon, getMyContribution, saveMyContribution, deleteMyContribution } from "./fb.js";
 
 const $ = id => document.getElementById(id);
 
@@ -25,11 +25,14 @@ async function render(user, profile) {
   }
   const yrStr = (s, e) => s ? `${s}–${e || "nay"}` : "";
   const meRole = [mine.title, mine.department, yrStr(mine.startYear, mine.endYear)].filter(Boolean).map(esc).join(" · ");
-  const list = mine.contacts.map(c => {
+  const list = mine.contacts.map((c, i) => {
     const sub = [c.title, c.department, yrStr(c.startYear, c.endYear)].filter(Boolean).map(esc).join(" · ");
     return `<div class="my-rel">
       <div><b>${esc(c.name)}</b>${sub ? ` <span class="muted">· ${sub}</span>` : ""}</div>
-      <div class="my-rel-tag">${relIcon(c.relationship)} ${esc(c.relationship||"quen biết")}</div></div>`;
+      <div style="display:flex;align-items:center;gap:8px">
+        <div class="my-rel-tag">${relIcon(c.relationship)} ${esc(c.relationship||"quen biết")}</div>
+        <button class="cc-remove" data-i="${i}" title="Xoá người quen này" aria-label="Xoá">✕</button>
+      </div></div>`;
   }).join("");
 
   body.innerHTML = head +
@@ -40,6 +43,23 @@ async function render(user, profile) {
        <a class="btn sm" href="khaibao.html">✏️ Sửa</a>
        <button class="btn ghost sm danger" id="myDel">🗑️ Xoá toàn bộ khai báo</button>
      </div>`;
+
+  body.querySelectorAll(".my-rel .cc-remove").forEach(btn => {
+    btn.onclick = async () => {
+      const i = +btn.dataset.i;
+      if (!confirm(`Xoá người quen “${mine.contacts[i].name}” khỏi khai báo?`)) return;
+      mine.contacts.splice(i, 1);
+      try {
+        if (mine.contacts.length)
+          await saveMyContribution(user.uid, profile.displayName,
+            { title: mine.title, department: mine.department, startYear: mine.startYear, endYear: mine.endYear, contacts: mine.contacts });
+        else
+          await deleteMyContribution(user.uid);
+        await render(user, profile);
+      } catch (e) { alert("Xoá thất bại: " + (e.message||e)); }
+    };
+  });
+
   $("myDel").onclick = async () => {
     if (!confirm("Xoá toàn bộ quan hệ bạn đã khai? Không thể hoàn tác.")) return;
     try { await deleteMyContribution(user.uid); await render(user, profile); }

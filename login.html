@@ -32,12 +32,19 @@
     <div id="loginForm">
       <input id="liEmail" type="email" autocomplete="email" placeholder="Email"/>
       <input id="liPass" type="password" autocomplete="current-password" placeholder="Mật khẩu"/>
+      <div class="gate-row2">
+        <label><input type="checkbox" id="liShow"/> Hiện mật khẩu</label>
+        <a href="#" id="liForgot">Quên mật khẩu?</a>
+      </div>
       <button class="btn gate-btn" id="liBtn">Đăng nhập</button>
     </div>
     <div id="registerForm" hidden>
       <input id="rgName" placeholder="Tên hiển thị (vd: Nguyễn Văn A)"/>
       <input id="rgEmail" type="email" autocomplete="email" placeholder="Email"/>
       <input id="rgPass" type="password" autocomplete="new-password" placeholder="Mật khẩu (≥ 6 ký tự)"/>
+      <div class="gate-row2">
+        <label><input type="checkbox" id="rgShow"/> Hiện mật khẩu</label>
+      </div>
       <button class="btn gate-btn" id="rgBtn">Tạo tài khoản</button>
     </div>
     <div class="gate-status" id="gateStatus"></div>

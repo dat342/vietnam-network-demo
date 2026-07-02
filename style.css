@@ -238,6 +238,11 @@ footer{margin-top:30px;color:var(--muted);font-size:12.5px;border-top:1px solid 
 .gate-btn{width:100%;margin-top:4px}
 .gate-status{min-height:20px;font-size:13px;margin-top:12px;color:var(--muted)}
 .gate-status.err{color:#ff8a8a}
+.gate-status.ok{color:var(--user-ink)}
+.gate-row2{display:flex;justify-content:space-between;align-items:center;gap:10px;margin:-2px 2px 10px;font-size:12.5px}
+.gate-row2 label{display:flex;align-items:center;gap:6px;color:var(--muted);cursor:pointer}
+.gate-row2 input[type=checkbox]{width:auto;margin:0}
+.gate-row2 a{color:var(--accent2);font-weight:600}
 
 /* modal rong cho admin */
 .modal-wide{max-width:720px}
@@ -337,7 +342,8 @@ a.btn{text-decoration:none;display:inline-flex;align-items:center;justify-conten
 .main{flex:1;min-width:0;display:flex;flex-direction:column}
 .topbar{display:flex;align-items:center;gap:12px;padding:10px 20px;border-bottom:1px solid var(--line);background:var(--bg2);position:sticky;top:0;z-index:20}
 .tb-menu{display:none;font-size:22px;color:var(--ink);cursor:pointer;background:none;border:0}
-.tb-search{flex:1;max-width:440px;display:flex;align-items:center;gap:8px;background:var(--card2);border:1px solid var(--line);border-radius:10px;padding:8px 12px;color:var(--muted);font-size:13.5px;cursor:text}
+.tb-search{flex:1;max-width:440px;display:flex;align-items:center;gap:8px;background:var(--card2);border:1px solid var(--line);border-radius:10px;padding:8px 12px;color:var(--muted);font-size:13.5px;cursor:pointer;font-family:inherit;text-align:left;transition:border .15s,color .15s}
+.tb-search:hover{border-color:var(--accent);color:var(--ink)}
 .tb-search .ti{font-size:16px}
 .tb-right{margin-left:auto;display:flex;align-items:center;gap:12px}
 .tb-user{width:32px;height:32px;border-radius:50%;background:rgba(0,74,239,.1);color:var(--accent);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:12.5px}

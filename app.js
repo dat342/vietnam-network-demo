@@ -345,6 +345,20 @@
     }
     return {
       get code(){ return selectedCode; },
+      // Neu nguoi dung go dung ten ma quen bam goi y: tu chon khi khong nhap nhang.
+      resolve(){
+        if (selectedCode) return selectedCode;
+        const q = norm(input.value); if (!q) return null;
+        let pool = peopleList;
+        if (filterSym) pool = pool.filter(p => !p.kind && (people[p.code].companies || []).includes(filterSym));
+        const exact = pool.filter(p => p.key === q);
+        if (exact.length === 1) { selectedCode = exact[0].code; input.value = exact[0].name; return selectedCode; }
+        if (exact.length === 0) {
+          const partial = pool.filter(p => p.key.includes(q));
+          if (partial.length === 1) { selectedCode = partial[0].code; input.value = partial[0].name; return selectedCode; }
+        }
+        return null;
+      },
       set(code){ if(!people[code]) return; selectedCode = code; input.value = stripTitle(people[code].name); clearFilterUI(); },
       setFilter(sym){
         filterSym = sym; selectedCode = null;
@@ -395,7 +409,7 @@
   /* ---------- nut tim ---------- */
   function doFind() {
     const allowWeak = document.getElementById("weakToggle").checked;
-    const f = fromAC.code, t = toAC.code;
+    const f = fromAC.resolve(), t = toAC.resolve();
     if (!f || !t) {
       resultEl.innerHTML = `<div class="panel empty-msg"><div class="big">Hãy chọn đủ 2 người</div>
         <div>Gõ tên rồi chọn trong danh sách gợi ý (hoặc bấm một cặp ví dụ bên dưới).</div></div>`;
@@ -570,6 +584,7 @@
   window.VNNet = {
     norm,
     applyContributions,
+    hasPerson(code){ return !!people[code]; },
     relTypes: REL_TYPES,
     searchPeople(q, limit = 20) {
       const nq = norm(q);

@@ -26,17 +26,20 @@
       <div class="page-title">Khám phá mạng lưới</div>
       <div class="page-sub">Chọn một người để xem mạng lưới quanh họ. Bấm vào node bất kỳ để khám phá tiếp.</div>
       <div class="panel" style="margin-bottom:14px">
-        <div class="field" style="max-width:440px;position:relative;margin:0">
-          <input id="centerSearch" autocomplete="off" placeholder="Nhập tên người để xem mạng lưới…"/>
-          <div class="ac" id="centerAc"></div>
+        <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+          <div class="field" style="flex:1;min-width:240px;max-width:440px;position:relative;margin:0">
+            <input id="centerSearch" autocomplete="off" placeholder="Nhập tên người để xem mạng lưới…"/>
+            <div class="ac" id="centerAc"></div>
+          </div>
+          <button class="btn ghost sm" id="fitBtn" type="button"><i class="ti ti-focus-centered"></i> Về giữa</button>
         </div>
       </div>
       <div id="graph" class="graph-box"></div>
       <div class="graph-legend">
         <span><i class="lg-dot" style="background:#004aef"></i> Người đang xem</span>
-        <span><i class="lg-dot" style="background:#3d74ff"></i> Người</span>
-        <span><i class="lg-dot" style="background:#16a34a"></i> Người dùng thêm</span>
-        <span><i class="lg-sq" style="background:#e0a400"></i> Công ty</span>
+        <span><i class="lg-dot" style="background:#4d80ff"></i> Người</span>
+        <span><i class="lg-dot" style="background:#07c98a"></i> Người dùng thêm</span>
+        <span><i class="lg-sq" style="background:#ffce00"></i> Công ty</span>
       </div>
     </div>
   </div>

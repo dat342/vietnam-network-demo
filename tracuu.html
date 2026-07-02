@@ -27,7 +27,10 @@
       <div class="page-sub">Chọn công ty và phòng ban để xem danh sách lãnh đạo.</div>
       <div class="panel">
         <div class="filter-row">
-          <div class="filter-field"><label>Công ty</label><select id="selCompany"></select></div>
+          <div class="filter-field"><label>Công ty</label>
+            <input id="selCompany" class="plain-input" list="companyOptions" autocomplete="off" placeholder="Gõ hoặc chọn mã (vd: VNM, FPT)…"/>
+            <datalist id="companyOptions"></datalist>
+          </div>
           <div class="filter-field"><label>Phòng ban</label><select id="selDept"></select></div>
         </div>
       </div>

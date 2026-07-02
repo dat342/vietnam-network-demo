@@ -13,17 +13,24 @@ requireAuth((user, profile) => {
   const syms = Object.keys(D.companies).sort();
   const params = new URLSearchParams(location.search);
 
-  selC.innerHTML = syms.map(s => `<option value="${esc(s)}">${esc(s)} — ${esc(D.companies[s].sector)}</option>`).join("");
+  $("companyOptions").innerHTML = syms.map(s => `<option value="${esc(s)}">${esc(D.companies[s].sector)}</option>`).join("");
+  const curSym = () => selC.value.trim().toUpperCase();
   const preC = params.get("company");
   if (preC && D.companies[preC]) selC.value = preC;
 
   function fillDepts() {
-    const sym = selC.value;
+    const sym = curSym();
+    if (!D.companies[sym]) { selD.innerHTML = `<option value="">Tất cả phòng ban</option>`; return; }
     const groups = [...new Set((D.companies[sym].members || []).map(c => (D.people[c].groups || {})[sym] || "").filter(Boolean))];
     selD.innerHTML = `<option value="">Tất cả phòng ban</option>` + groups.map(g => `<option value="${esc(g)}">${esc(g)}</option>`).join("");
   }
   function render() {
-    const sym = selC.value, dept = selD.value;
+    const sym = curSym(), dept = selD.value;
+    if (!D.companies[sym]) {
+      res.innerHTML = `<div class="empty-msg" style="padding:24px"><div class="big">Chọn một công ty</div>
+        <div>Gõ hoặc chọn mã doanh nghiệp ở ô trên để xem danh sách lãnh đạo.</div></div>`;
+      return;
+    }
     let members = (D.companies[sym].members || []).map(code => {
       const p = D.people[code];
       return { code, p, pos: (p.positions || {})[sym] || "", grp: (p.groups || {})[sym] || "" };
@@ -37,7 +44,9 @@ requireAuth((user, profile) => {
           <i class="ti ti-chevron-right lr-arrow" aria-hidden="true"></i>
         </a>`).join("") + `</div>`;
   }
-  selC.onchange = () => { fillDepts(); render(); };
+  const update = () => { fillDepts(); render(); };
+  selC.addEventListener("change", update);
+  selC.addEventListener("input", () => { if (D.companies[curSym()]) update(); });
   selD.onchange = render;
   fillDepts();
   const preD = params.get("dept");
